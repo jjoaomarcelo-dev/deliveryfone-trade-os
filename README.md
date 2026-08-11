@@ -2,28 +2,6 @@
 
 Sistema web em desenvolvimento, criado a partir de necessidades reais de uma operação de varejo de telefonia. A proposta é centralizar em um único ambiente processos que fazem parte da rotina da loja, conectando gestores e vendedores na gestão de estoque, formação de preços, simulações, vendas, avaliação de aparelhos usados e comunicação interna.
 
-## Demonstração visual
-
-As telas abaixo foram capturadas no aplicativo em execução com dados exclusivamente demonstrativos, criados para documentar os fluxos sem expor informações pessoais ou comerciais da operação.
-
-### Estoque e precificação
-
-Busca e filtros por status, categoria e tipo, com visão comercial e financeira do produto para o perfil gestor.
-
-![Estoque e precificação de produto no Deliveryfone Trade OS](docs/images/estoque-produto.jpg)
-
-### Simulação de venda
-
-Comparação de condições comerciais, entrada, aparelho na troca e parcelamento calculado conforme as taxas configuradas.
-
-![Simulação de venda parcelada no Deliveryfone Trade OS](docs/images/simulacao-parcelada.jpg)
-
-### Avaliação de aparelho usado
-
-Fluxo guiado para identificar o aparelho, avaliar seu estado e estimar o valor de compra antes da conferência presencial.
-
-![Avaliação de aparelho usado no Deliveryfone Trade OS](docs/images/avaliacao-usado.jpg)
-
 ## Origem do projeto
 
 A ideia surgiu durante minha experiência na gestão de uma loja de celulares. No dia a dia, comecei a identificar problemas que dificultavam tanto o trabalho dos vendedores quanto o controle da operação pelos gestores.
