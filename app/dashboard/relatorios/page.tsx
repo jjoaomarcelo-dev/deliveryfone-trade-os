@@ -22,6 +22,7 @@ interface Venda {
   categoria: string | null
   atributos: { gb?: string; cor?: string; custo_total?: number } | null
   vendido_por: string | null
+  vendido_por_nome: string | null
   vendido_por_id: string | null
   forma_pagamento: string | null
   valor_venda: number | null
@@ -121,7 +122,7 @@ export default function Relatorios() {
 
     let query = supabase
       .from('products')
-      .select('id, modelo, categoria, atributos, vendido_por, vendido_por_id, forma_pagamento, valor_venda, valor_liquido, margem_bruta, desconto_aplicado, parcelas_venda, data_venda, data_confirmacao, confirmado_por')
+      .select('id, modelo, categoria, atributos, vendido_por, vendido_por_nome, vendido_por_id, forma_pagamento, valor_venda, valor_liquido, margem_bruta, desconto_aplicado, parcelas_venda, data_venda, data_confirmacao, confirmado_por')
       .eq('store_id', profile.store_id)
       .eq('status', 'confirmado')
       .gte('data_confirmacao', inicio)
@@ -138,7 +139,10 @@ export default function Relatorios() {
   }, [profile, periodo, customInicio, customFim])
 
   useEffect(() => {
-    if (profile) carregarVendas()
+    if (!profile) return
+
+    const timeoutId = window.setTimeout(carregarVendas, 0)
+    return () => window.clearTimeout(timeoutId)
   }, [profile, carregarVendas])
 
   // ── Estatísticas globais ──────────────────────────────────────────────────
@@ -151,7 +155,7 @@ export default function Relatorios() {
   // ── Ranking por vendedor ──────────────────────────────────────────────────
   const statsMap: Record<string, VendedorStat> = {}
   vendas.forEach(v => {
-    const nome = v.vendido_por ?? 'Desconhecido'
+    const nome = v.vendido_por_nome ?? v.vendido_por ?? 'Desconhecido'
     if (!statsMap[nome]) {
       statsMap[nome] = { nome, qtd: 0, totalBruto: 0, totalLiquido: 0, totalMargem: 0, totalDesconto: 0, ticketMedio: 0 }
     }
@@ -168,7 +172,7 @@ export default function Relatorios() {
   const vendedores = ['todos', ...ranking.map(r => r.nome)]
   const vendasFiltradas = vendedorFiltro === 'todos'
     ? vendas
-    : vendas.filter(v => (v.vendido_por ?? 'Desconhecido') === vendedorFiltro)
+    : vendas.filter(v => (v.vendido_por_nome ?? v.vendido_por ?? 'Desconhecido') === vendedorFiltro)
 
   const ehGestor = profile?.cargo === 'gestor'
 
@@ -190,7 +194,7 @@ export default function Relatorios() {
       v.data_confirmacao ?? '',
       v.modelo,
       v.categoria ?? '',
-      v.vendido_por ?? '',
+      v.vendido_por_nome ?? v.vendido_por ?? '',
       v.forma_pagamento ?? '',
       v.parcelas_venda?.toString() ?? '',
       formatarValor(v.valor_venda),
@@ -452,8 +456,8 @@ export default function Relatorios() {
                           {v.atributos?.gb ? ` · ${v.atributos.gb}` : ''}
                           {temDesconto && <span className="ml-1 text-xs px-1.5 py-0.5 rounded-full" style={{ backgroundColor: '#f8717120', color: '#f87171' }}>−{fmt(v.desconto_aplicado!)}↓</span>}
                         </p>
-                        {ehGestor && v.vendido_por && (
-                          <p className="text-xs mt-0.5" style={{ color: '#555' }}>{v.vendido_por}</p>
+                        {ehGestor && (v.vendido_por_nome || v.vendido_por) && (
+                          <p className="text-xs mt-0.5" style={{ color: '#555' }}>{v.vendido_por_nome || v.vendido_por}</p>
                         )}
                       </div>
                       <div>

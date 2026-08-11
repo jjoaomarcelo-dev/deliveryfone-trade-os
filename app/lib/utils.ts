@@ -13,6 +13,17 @@ export function parseBRL(s: string): number {
   return parseFloat(s.replace(/\./g, '').replace(',', '.')) || 0
 }
 
+/** Converte o desconto máximo informado no preço mínimo à vista armazenado. */
+export function precoMinimoAvista(valorVenda: number, descontoMaximo: number): number {
+  return Math.max(0, valorVenda - Math.max(0, descontoMaximo))
+}
+
+/** Recupera o desconto máximo a partir do preço mínimo à vista já armazenado. */
+export function descontoMaximoAvista(valorVenda: number, precoMinimo: number | null): number {
+  if (precoMinimo === null) return 0
+  return Math.max(0, valorVenda - precoMinimo)
+}
+
 /** Retorna quantos dias um produto está no estoque desde data_entrada */
 export function diasNoEstoque(data: string | null): number {
   if (!data) return 0

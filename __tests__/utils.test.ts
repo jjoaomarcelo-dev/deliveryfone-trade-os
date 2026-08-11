@@ -1,4 +1,4 @@
-import { parseBRL, fmt, diasNoEstoque, dataHoje } from '../app/lib/utils'
+import { parseBRL, fmt, diasNoEstoque, dataHoje, precoMinimoAvista, descontoMaximoAvista } from '../app/lib/utils'
 
 // ─── parseBRL ─────────────────────────────────────────────────────────────────
 
@@ -72,6 +72,20 @@ describe('parseBRL + fmt (round-trip)', () => {
     test(`${v} → fmt → parseBRL → ${v}`, () => {
       expect(parseBRL(fmt(v))).toBeCloseTo(v, 2)
     })
+  })
+})
+
+describe('desconto máximo à vista', () => {
+  test('R$ 100 de desconto em R$ 2.000 resulta em preço mínimo de R$ 1.900', () => {
+    expect(precoMinimoAvista(2000, 100)).toBe(1900)
+  })
+
+  test('recupera o desconto a partir de dados existentes', () => {
+    expect(descontoMaximoAvista(2000, 1900)).toBe(100)
+  })
+
+  test('não permite preço mínimo negativo', () => {
+    expect(precoMinimoAvista(2000, 2500)).toBe(0)
   })
 })
 

@@ -4,7 +4,7 @@ import { useEffect, useState, useMemo } from 'react'
 import { createClient } from '../lib/supabase'
 import { useRouter } from 'next/navigation'
 import { MODELOS_IPHONE, GB_IPHONE, CORES_IPHONE } from '../lib/iphone-data'
-import { dataHoje, diasNoEstoque } from '../lib/utils'
+import { dataHoje, diasNoEstoque, descontoMaximoAvista, precoMinimoAvista } from '../lib/utils'
 import { type Juros, TAXA_REAL_FALLBACK, calcParcelado } from '../lib/financeiro'
 import { getTaxasAtivas } from '../lib/taxas'
 import { SpinnerPage } from './Spinner'
@@ -35,7 +35,6 @@ export default function ProdutoForm({ produtoId }: Props) {
   const [bateria, setBateria] = useState('')
   const [imei, setImei] = useState('')
   const [observacoes, setObservacoes] = useState('')
-  const [videoUrl, setVideoUrl] = useState('')
   const [dataEntrada, setDataEntrada] = useState(dataHoje())
   const [status, setStatus] = useState('disponivel')
 
@@ -67,6 +66,10 @@ export default function ProdutoForm({ produtoId }: Props) {
     return (preco * 0.92) - custoTotal
   }
 
+  function formatarLucro(lucro: number | null) {
+    return lucro?.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) ?? '—'
+  }
+
   function calcRecebidoLiquido(valorParcelado: number, taxaReal: number | null, parcelas?: number) {
     const taxa = taxaReal ?? (parcelas !== undefined ? (TAXA_REAL_FALLBACK[parcelas] ?? 14) : 14)
     return valorParcelado * (1 - taxa / 100)
@@ -93,8 +96,8 @@ export default function ProdutoForm({ produtoId }: Props) {
 
       if (!profile) { router.push('/login'); return }
 
-      // Edição: apenas gestores podem editar
-      if (modoEditar && profile.cargo !== 'gestor') {
+      // Cadastro e edição de estoque são exclusivos do gestor.
+      if (profile.cargo !== 'gestor') {
         router.push('/dashboard')
         return
       }
@@ -120,7 +123,6 @@ export default function ProdutoForm({ produtoId }: Props) {
           setBateria(attr.bateria || '')
           setImei(attr.imei || '')
           setObservacoes(produto.observacoes || '')
-          setVideoUrl(produto.video_url || '')
           setDataEntrada(produto.data_entrada || dataHoje())
           setStatus(produto.status || 'disponivel')
           setOrigem(attr.origem || 'Compra')
@@ -129,7 +131,9 @@ export default function ProdutoForm({ produtoId }: Props) {
           setCustoEntrada(attr.custo_entrada?.toString() || '')
           setCustoManutencao(attr.custo_manutencao?.toString() || '')
           setValor(produto.valor?.toString() || '')
-          setValorMinimo(produto.valor_avista?.toString() || '')
+          setValorMinimo(
+            descontoMaximoAvista(Number(produto.valor ?? 0), produto.valor_avista == null ? null : Number(produto.valor_avista)).toString()
+          )
           setValorPromocional(produto.promocao?.toString() || '')
           if (produto.promocao_sem_juros) {
             setTemPromoSemJuros(true)
@@ -180,11 +184,10 @@ export default function ProdutoForm({ produtoId }: Props) {
         .update({
           modelo,
           valor: parseFloat(valor) || 0,
-          valor_avista: parseFloat(valorMinimo) || parseFloat(valor) || 0,
+          valor_avista: precoMinimoAvista(parseFloat(valor) || 0, parseFloat(valorMinimo) || 0),
           promocao: valorPromocional ? parseFloat(valorPromocional) : null,
           promocao_sem_juros: promocaoSemJuros,
           observacoes,
-          video_url: videoUrl.trim() || null,
           atributos,
           status,
           data_entrada: dataEntrada,
@@ -199,11 +202,10 @@ export default function ProdutoForm({ produtoId }: Props) {
         categoria: 'iphone',
         modelo,
         valor: parseFloat(valor),
-        valor_avista: parseFloat(valorMinimo) || parseFloat(valor),
+        valor_avista: precoMinimoAvista(parseFloat(valor) || 0, parseFloat(valorMinimo) || 0),
         promocao: valorPromocional || null,
         promocao_sem_juros: promocaoSemJuros,
         observacoes,
-        video_url: videoUrl.trim() || null,
         atributos,
         status,
         data_entrada: dataEntrada,
@@ -360,16 +362,6 @@ export default function ProdutoForm({ produtoId }: Props) {
                   style={{ backgroundColor: '#1a1a1a', borderColor: '#2a2a2a' }}
                   rows={2} placeholder="Detalhes extras sobre o aparelho..." />
                 <p className="text-xs mt-1" style={{ color: '#555' }}>Esta observação também aparece no catálogo.</p>
-              </div>
-              <div className="md:col-span-2">
-                <label className="text-sm mb-1 block" style={{ color: '#aaa' }}>Vídeo do produto (link)</label>
-                <input value={videoUrl} onChange={e => setVideoUrl(e.target.value)}
-                  className="w-full rounded-xl px-4 py-3 text-white border outline-none"
-                  style={{ backgroundColor: '#1a1a1a', borderColor: '#2a2a2a' }}
-                  placeholder="Cole o link do vídeo (YouTube, Instagram, Drive...)" />
-                <p className="text-xs mt-1" style={{ color: '#555' }}>
-                  Vídeo real e único deste aparelho — aparece no catálogo enquanto estiver disponível.
-                </p>
               </div>
             </div>
           )}
@@ -528,10 +520,10 @@ export default function ProdutoForm({ produtoId }: Props) {
                 {valor && custoTotal > 0 && (
                   <div className="mt-1.5 flex flex-col gap-0.5">
                     <p className="text-xs" style={{ color: '#4ade80' }}>
-                      Lucro s/ NF: R$ {calcLucro(parseFloat(valor))!.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                      Lucro s/ NF: R$ {formatarLucro(calcLucro(parseFloat(valor)))}
                     </p>
                     <p className="text-xs" style={{ color: '#fb923c' }}>
-                      Lucro c/ NF: R$ {calcLucroComNF(parseFloat(valor))!.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                      Lucro c/ NF: R$ {formatarLucro(calcLucroComNF(parseFloat(valor)))}
                     </p>
                   </div>
                 )}
@@ -542,14 +534,14 @@ export default function ProdutoForm({ produtoId }: Props) {
                 <input type="number" value={valorMinimo} onChange={e => setValorMinimo(e.target.value)}
                   className="w-full rounded-xl px-4 py-3 text-white border outline-none"
                   style={{ backgroundColor: '#1a1a1a', borderColor: '#2a2a2a' }}
-                  placeholder="Ex: 2100" />
+                  placeholder="Ex: 100" />
                 {valorMinimo && custoTotal > 0 && (
                   <div className="mt-1.5 flex flex-col gap-0.5">
                     <p className="text-xs" style={{ color: '#4ade80' }}>
-                      Lucro s/ NF: R$ {calcLucro(parseFloat(valorMinimo))!.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                      Preço mínimo: R$ {precoMinimoAvista(parseFloat(valor) || 0, parseFloat(valorMinimo) || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                     </p>
                     <p className="text-xs" style={{ color: '#fb923c' }}>
-                      Lucro c/ NF: R$ {calcLucroComNF(parseFloat(valorMinimo))!.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                      Lucro c/ NF no mínimo: R$ {formatarLucro(calcLucroComNF(precoMinimoAvista(parseFloat(valor) || 0, parseFloat(valorMinimo) || 0)))}
                     </p>
                   </div>
                 )}
@@ -564,10 +556,10 @@ export default function ProdutoForm({ produtoId }: Props) {
                 {valorPromocional && custoTotal > 0 && (
                   <div className="mt-1.5 flex flex-col gap-0.5">
                     <p className="text-xs" style={{ color: '#4ade80' }}>
-                      Lucro s/ NF: R$ {calcLucro(parseFloat(valorPromocional))!.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                      Lucro s/ NF: R$ {formatarLucro(calcLucro(parseFloat(valorPromocional)))}
                     </p>
                     <p className="text-xs" style={{ color: '#fb923c' }}>
-                      Lucro c/ NF: R$ {calcLucroComNF(parseFloat(valorPromocional))!.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                      Lucro c/ NF: R$ {formatarLucro(calcLucroComNF(parseFloat(valorPromocional)))}
                     </p>
                   </div>
                 )}

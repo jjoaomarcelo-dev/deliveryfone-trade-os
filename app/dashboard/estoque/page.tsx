@@ -57,6 +57,7 @@ interface Produto {
   data_entrada: string | null
   data_venda: string | null
   vendido_por: string | null
+  vendido_por_nome: string | null
   vendido_por_id: string | null
   reservado_por: string | null
   reserva_observacao: string | null
@@ -118,6 +119,7 @@ interface Notificacao {
   mensagem: string | null
   lida: boolean
   destinatario_id: string | null
+  autor_id?: string | null
   created_at: string
 }
 
@@ -308,7 +310,7 @@ export default function Estoque() {
   const [excluindo,    setExcluindo]    = useState(false)
 
   const router = useRouter()
-  const supabase = useMemo(() => createClient(), [])
+  const [supabase] = useState(createClient)
 
   useEffect(() => {
     let cancelado = false
@@ -498,6 +500,7 @@ export default function Estoque() {
         status: 'confirmado',
         data_venda: dataVenda,
         vendido_por: vendedorSelecionado || userId,
+        vendido_por_nome: vendedores.find(v => v.id === vendedorSelecionado)?.nome || nomeUsuario,
         vendido_por_id: vendedorSelecionado || userId,
         updated_by: userId,
       })
@@ -505,7 +508,8 @@ export default function Estoque() {
     if (error) { toastErro('Erro ao confirmar venda: ' + error.message); setSalvandoVenda(false); return }
     setProdutos(prev => prev.map(p =>
       p.id === modalVenda
-        ? { ...p, status: 'confirmado', data_venda: dataVenda, vendido_por: vendedorSelecionado || userId }
+        ? { ...p, status: 'confirmado', data_venda: dataVenda, vendido_por: vendedorSelecionado || userId,
+            vendido_por_nome: vendedores.find(v => v.id === vendedorSelecionado)?.nome || nomeUsuario }
         : p
     ))
     setSalvandoVenda(false)
@@ -555,6 +559,7 @@ export default function Estoque() {
       tipo: 'reserva',
       titulo: `🔒 Produto reservado por ${nomeUsuario}`,
       mensagem: produto ? `${produto.modelo} · ${produto.atributos?.gb ?? ''} · ${produto.atributos?.cor ?? ''}${sinalInfo}${reservaObs ? ` — ${reservaObs}` : ''}` : null,
+      autor_id: userId,
     })
     setModalReserva(null)
     setReservaObs('')
@@ -581,6 +586,7 @@ export default function Estoque() {
       tipo: 'reserva',
       titulo: `🔓 Reserva cancelada por ${nomeUsuario}`,
       mensagem: produto ? `${produto.modelo} · ${produto.atributos?.gb ?? ''} · ${produto.atributos?.cor ?? ''}` : null,
+      autor_id: userId,
     })
   }
 
@@ -596,8 +602,8 @@ export default function Estoque() {
     setContadoresChat(c => ({ ...c, [produtoId]: 0 }))
 
     const [{ data: msgs }, { data: reqs }] = await Promise.all([
-      supabase.from('product_messages').select('*').eq('produto_id', produtoId).order('created_at', { ascending: true }),
-      supabase.from('discount_requests').select('*').eq('produto_id', produtoId).eq('status', 'pendente').order('created_at', { ascending: true }),
+      supabase.from('product_messages').select('*').eq('store_id', storeId).eq('produto_id', produtoId).order('created_at', { ascending: true }),
+      supabase.from('discount_requests').select('*').eq('store_id', storeId).eq('produto_id', produtoId).eq('status', 'pendente').order('created_at', { ascending: true }),
     ])
     if (msgs) setMensagensChat(msgs as ProductMessage[])
     if (reqs) setPedidosPendentes(reqs as DiscountRequest[])
@@ -640,6 +646,7 @@ export default function Estoque() {
       titulo: `💬 ${nomeUsuario} — ${produto?.modelo ?? 'produto'}`,
       mensagem: preview,
       destinatario_id: destinatarioId,
+      autor_id: userId,
     })
     if (notifError) console.error('[enviarMensagem] notif erro:', notifError.message)
 
@@ -650,7 +657,7 @@ export default function Estoque() {
     const { error } = await supabase.from('product_messages').insert({
       produto_id: produtoId,
       store_id: storeId,
-      autor_id: null,
+      autor_id: userId,
       autor_nome: 'Sistema',
       autor_cargo: 'sistema',
       mensagem,
@@ -691,6 +698,7 @@ export default function Estoque() {
         mensagem: produto
           ? `${produto.modelo} · ${produto.atributos?.gb ?? ''} — R$ ${fmt(valSol)}${motivoDesconto.trim() ? ` · ${motivoDesconto.trim()}` : ''}`
           : null,
+        autor_id: userId,
       })
     }
     setValorSolicitado('')
@@ -733,6 +741,8 @@ export default function Estoque() {
                 acaoResposta === 'negado'   ? `❌ Desconto negado — ${nomeUsuario}` :
                                               `💡 Contra-proposta — ${nomeUsuario}`,
         mensagem: msgSistema,
+        destinatario_id: req?.vendedor_id ?? null,
+        autor_id: userId,
       })
       setPedidosPendentes(prev => prev.filter(r => r.id !== respondendoId))
     }
@@ -786,7 +796,8 @@ export default function Estoque() {
     const updates: Record<string, unknown> = {
       status: 'vendido',
       data_venda: hoje,
-      vendido_por: nomeUsuario,
+      vendido_por: userId,
+      vendido_por_nome: nomeUsuario,
       vendido_por_id: userId,
       forma_pagamento: formaPagamento,
       updated_by: userId,
@@ -817,7 +828,7 @@ export default function Estoque() {
     setProdutos(prev => prev.map(p =>
       p.id === modalVendaVendedor
         ? {
-            ...p, status: 'vendido', data_venda: hoje, vendido_por: nomeUsuario,
+            ...p, status: 'vendido', data_venda: hoje, vendido_por: userId, vendido_por_nome: nomeUsuario,
             forma_pagamento: formaPagamento,
             parcelas_venda: usaParcelado ? parcelasVenda : null,
             taxa_aplicada:  usaParcelado ? taxaAplicada  : null,
@@ -836,6 +847,7 @@ export default function Estoque() {
         ? `${produto.modelo} · ${produto.atributos?.gb ?? ''} · ${produto.atributos?.cor ?? ''}` +
           `${!isNaN(valorNum) && valorNum > 0 ? ` · R$ ${fmt(valorNum)}` : ''} · ${formaLabel}`
         : null,
+      autor_id: userId,
     })
     setSalvandoVendaVendedor(false)
     resetModalVenda()
@@ -878,7 +890,8 @@ export default function Estoque() {
       status:           'confirmado',
       updated_by:       userId,
       data_venda:       produto?.data_venda || dataHoje(),
-      vendido_por:      produto?.vendido_por || produto?.reservado_por || null,
+      vendido_por:      produto?.vendido_por_id || produto?.vendido_por || null,
+      vendido_por_nome: produto?.vendido_por_nome || produto?.reservado_por || null,
       vendido_por_id:   produto?.vendido_por_id || null,
       forma_pagamento:  formaConfirm,
       confirmado_por:   nomeUsuario,
@@ -906,6 +919,8 @@ export default function Estoque() {
       tipo: 'venda_confirmada',
       titulo: `✅ Venda confirmada — ${produto?.modelo ?? ''}`,
       mensagem: `Confirmado por ${nomeUsuario}${totalBruto > 0 ? ` · R$ ${fmt(totalBruto)}` : ''}`,
+      destinatario_id: produto?.vendido_por_id ?? null,
+      autor_id: userId,
     })
     resetModalConfirmar()
     setSalvandoConfirmar(false)
@@ -924,6 +939,7 @@ export default function Estoque() {
       updated_by:         userId,
       // Limpa dados da venda
       vendido_por:        null,
+      vendido_por_nome:   null,
       vendido_por_id:     null,
       forma_pagamento:    null,
       valor_venda:        null,
@@ -952,6 +968,8 @@ export default function Estoque() {
         tipo: 'venda_devolvida',
         titulo: `↩️ Venda devolvida — ${produto?.modelo ?? ''}`,
         mensagem: motivo || `Devolvido por ${nomeUsuario}`,
+        destinatario_id: produto?.vendido_por_id ?? null,
+        autor_id: userId,
       })
       resetModalConfirmar()
     }
@@ -1057,7 +1075,9 @@ export default function Estoque() {
 
   // Notificações visíveis para este usuário
   const notificacoesVisiveis = useMemo(
-    () => notificacoes.filter(n => n.destinatario_id === null || n.destinatario_id === userId),
+    () => notificacoes.filter(n =>
+      n.autor_id !== userId && (n.destinatario_id === null || n.destinatario_id === userId)
+    ),
     [notificacoes, userId]
   )
 
@@ -1878,9 +1898,9 @@ export default function Estoque() {
                     <div className="mx-5 mb-3 px-4 py-3 rounded-xl"
                       style={{ backgroundColor: '#fb923c15', border: '1px solid #fb923c33' }}>
                       <p className="text-xs font-bold mb-1" style={{ color: '#fb923c' }}>⏳ Aguardando confirmação do gestor</p>
-                      {produto.vendido_por && (
+                      {(produto.vendido_por_nome || produto.vendido_por) && (
                         <p className="text-xs font-medium" style={{ color: '#ccc' }}>
-                          Vendido por: <span style={{ color: '#fb923c' }}>{produto.vendido_por}</span>
+                          Vendido por: <span style={{ color: '#fb923c' }}>{produto.vendido_por_nome || produto.vendido_por}</span>
                         </p>
                       )}
                       {produto.data_venda && <p className="text-xs mt-0.5" style={{ color: '#777' }}>Registrado em {produto.data_venda}</p>}
@@ -1912,11 +1932,11 @@ export default function Estoque() {
                     <div className="mx-5 mb-3 px-4 py-3 rounded-xl"
                       style={{ backgroundColor: '#fb923c15', border: '1px solid #fb923c44' }}>
                       <p className="text-xs font-bold mb-2" style={{ color: '#fb923c' }}>⏳ Pendente de confirmação</p>
-                      {(produto.vendido_por || produto.reservado_por) && (
+                      {(produto.vendido_por_nome || produto.reservado_por) && (
                         <div className="flex items-center gap-2 mb-1">
                           <span className="text-xs" style={{ color: '#666' }}>Vendedor:</span>
                           <span className="text-xs font-semibold" style={{ color: '#fff' }}>
-                            {produto.vendido_por || produto.reservado_por}
+                            {produto.vendido_por_nome || produto.reservado_por}
                           </span>
                         </div>
                       )}
@@ -1941,11 +1961,11 @@ export default function Estoque() {
                       </div>
                       {/* Detalhes */}
                       <div className="px-4 py-3 flex flex-col gap-1.5">
-                        {(produto.vendido_por || produto.reservado_por) && (
+                        {(produto.vendido_por_nome || produto.reservado_por) && (
                           <div className="flex items-center justify-between">
                             <span className="text-xs" style={{ color: '#555' }}>Vendedor</span>
                             <span className="text-xs font-semibold" style={{ color: '#fff' }}>
-                              👤 {produto.vendido_por || produto.reservado_por}
+                              👤 {produto.vendido_por_nome || produto.reservado_por}
                             </span>
                           </div>
                         )}
@@ -2619,7 +2639,7 @@ export default function Estoque() {
       {/* ═══ Modal: Confirmar Saída (gestor) ═══ */}
       {modalConfirmar && (() => {
         const p = produtos.find(x => x.id === modalConfirmar)
-        const vendedorNome = p?.vendido_por || p?.reservado_por
+        const vendedorNome = p?.vendido_por_nome || p?.reservado_por
 
         const formasG: { key: FormaPagamento; label: string; emoji: string }[] = [
           { key: 'a_vista',   label: 'À Vista',   emoji: '💵' },
@@ -2984,7 +3004,11 @@ export default function Estoque() {
                     <p className="text-xs mb-0.5" style={{ color: '#aaa' }}>
                       <span style={{ color: '#f59e0b' }}>{req.vendedor_nome}</span> pediu: <span className="font-bold text-white">R$ {fmt(req.valor_solicitado)}</span>
                     </p>
-                    {req.motivo && <p className="text-xs mb-2" style={{ color: '#666' }}>"{req.motivo}"</p>}
+                    {req.motivo && (
+                      <p className="text-xs mb-2" style={{ color: '#666' }}>
+                        &quot;{req.motivo}&quot;
+                      </p>
+                    )}
 
                     {respondendoId === req.id ? (
                       <div className="flex flex-col gap-2">

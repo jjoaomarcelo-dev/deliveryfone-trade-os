@@ -40,7 +40,17 @@ ALTER TABLE products
   ADD COLUMN IF NOT EXISTS confirmado_por         TEXT,
   ADD COLUMN IF NOT EXISTS data_confirmacao       DATE,
   ADD COLUMN IF NOT EXISTS motivo_devolucao       TEXT,
-  ADD COLUMN IF NOT EXISTS observacoes            TEXT;
+  ADD COLUMN IF NOT EXISTS observacoes            TEXT,
+  ADD COLUMN IF NOT EXISTS forma_pagamento        TEXT,
+  ADD COLUMN IF NOT EXISTS valor_venda            NUMERIC,
+  ADD COLUMN IF NOT EXISTS valor_liquido          NUMERIC,
+  ADD COLUMN IF NOT EXISTS valor_entrada          NUMERIC,
+  ADD COLUMN IF NOT EXISTS parcelas_venda         INTEGER,
+  ADD COLUMN IF NOT EXISTS taxa_aplicada          NUMERIC,
+  ADD COLUMN IF NOT EXISTS data_venda             DATE,
+  ADD COLUMN IF NOT EXISTS vendido_por            TEXT,
+  ADD COLUMN IF NOT EXISTS vendido_por_nome       TEXT,
+  ADD COLUMN IF NOT EXISTS vendido_por_id         UUID REFERENCES auth.users(id);
 
 
 -- ============================================================
@@ -49,22 +59,55 @@ ALTER TABLE products
 
 ALTER TABLE products ENABLE ROW LEVEL SECURITY;
 
-DO $$
+DROP POLICY IF EXISTS "produtos_update_store" ON products;
+DROP POLICY IF EXISTS "products_update_gestor" ON products;
+DROP POLICY IF EXISTS "products_update_vendedor" ON products;
+CREATE POLICY "products_update_gestor" ON products
+  FOR UPDATE USING (
+    store_id = (SELECT store_id FROM profiles WHERE id = auth.uid())
+    AND (SELECT cargo FROM profiles WHERE id = auth.uid()) = 'gestor'
+  );
+
+CREATE POLICY "products_update_vendedor" ON products
+  FOR UPDATE USING (
+    store_id = (SELECT store_id FROM profiles WHERE id = auth.uid())
+    AND (SELECT cargo FROM profiles WHERE id = auth.uid()) = 'vendedor'
+    AND status IN ('disponivel', 'reservado')
+  )
+  WITH CHECK (
+    store_id = (SELECT store_id FROM profiles WHERE id = auth.uid())
+    AND status IN ('disponivel', 'reservado', 'vendido')
+  );
+
+CREATE OR REPLACE FUNCTION protect_product_manager_fields()
+RETURNS trigger
+LANGUAGE plpgsql SECURITY DEFINER
+SET search_path = public
+AS $$
 BEGIN
-  IF NOT EXISTS (
-    SELECT 1 FROM pg_policies
-    WHERE tablename = 'products' AND policyname = 'produtos_update_store'
-  ) THEN
-    CREATE POLICY "produtos_update_store" ON products
-      FOR UPDATE
-      USING (
-        store_id = (SELECT store_id FROM profiles WHERE id = auth.uid())
-      )
-      WITH CHECK (
-        store_id = (SELECT store_id FROM profiles WHERE id = auth.uid())
-      );
+  IF EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND cargo = 'vendedor')
+     AND (
+       NEW.store_id IS DISTINCT FROM OLD.store_id OR
+       NEW.modelo IS DISTINCT FROM OLD.modelo OR
+       NEW.valor IS DISTINCT FROM OLD.valor OR
+       NEW.valor_avista IS DISTINCT FROM OLD.valor_avista OR
+       NEW.promocao IS DISTINCT FROM OLD.promocao OR
+       NEW.atributos IS DISTINCT FROM OLD.atributos OR
+       NEW.custo_snapshot IS DISTINCT FROM OLD.custo_snapshot OR
+       NEW.margem_bruta IS DISTINCT FROM OLD.margem_bruta OR
+       NEW.confirmado_por IS DISTINCT FROM OLD.confirmado_por OR
+       NEW.data_confirmacao IS DISTINCT FROM OLD.data_confirmacao
+     ) THEN
+    RAISE EXCEPTION 'vendedor não pode alterar campos gerenciais do produto';
   END IF;
-END $$;
+  RETURN NEW;
+END;
+$$;
+
+DROP TRIGGER IF EXISTS trg_protect_product_manager_fields ON products;
+CREATE TRIGGER trg_protect_product_manager_fields
+  BEFORE UPDATE ON products
+  FOR EACH ROW EXECUTE FUNCTION protect_product_manager_fields();
 
 DO $$
 BEGIN
@@ -80,19 +123,13 @@ BEGIN
   END IF;
 END $$;
 
-DO $$
-BEGIN
-  IF NOT EXISTS (
-    SELECT 1 FROM pg_policies
-    WHERE tablename = 'products' AND policyname = 'produtos_insert_store'
-  ) THEN
-    CREATE POLICY "produtos_insert_store" ON products
-      FOR INSERT
-      WITH CHECK (
-        store_id = (SELECT store_id FROM profiles WHERE id = auth.uid())
-      );
-  END IF;
-END $$;
+DROP POLICY IF EXISTS "produtos_insert_store" ON products;
+DROP POLICY IF EXISTS "products_insert" ON products;
+CREATE POLICY "products_insert" ON products
+  FOR INSERT WITH CHECK (
+    store_id = (SELECT store_id FROM profiles WHERE id = auth.uid())
+    AND (SELECT cargo FROM profiles WHERE id = auth.uid()) = 'gestor'
+  );
 
 DO $$
 BEGIN
@@ -325,6 +362,8 @@ ALTER TABLE notifications
 
 ALTER TABLE notifications ENABLE ROW LEVEL SECURITY;
 ALTER TABLE notifications REPLICA IDENTITY FULL;
+ALTER TABLE notifications
+  ADD COLUMN IF NOT EXISTS autor_id UUID REFERENCES auth.users(id) ON DELETE SET NULL;
 
 DO $$
 BEGIN
