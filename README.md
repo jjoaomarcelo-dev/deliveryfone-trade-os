@@ -155,11 +155,20 @@ O projeto continuará evoluindo à medida que avanço na revisão da implementa�
    ```env
    NEXT_PUBLIC_SUPABASE_URL=sua_url_do_supabase
    NEXT_PUBLIC_SUPABASE_ANON_KEY=sua_chave_anonima_do_supabase
+   SUPABASE_SERVICE_ROLE_KEY=sua_chave_service_role
    ```
 
    O arquivo `.env.local` não é versionado no repositório. As credenciais devem ser obtidas no projeto correspondente no Supabase.
 
+   `SUPABASE_SERVICE_ROLE_KEY` é usada exclusivamente pelas rotas administrativas do servidor para criar contas e atualizar o Supabase Auth. Ela nunca deve receber o prefixo `NEXT_PUBLIC_`, ser colocada em código cliente, enviada em mensagens ou incluída em commits. Na Vercel, cadastre-a como variável protegida nos ambientes necessários.
+
 4. Configure o banco de dados utilizando os scripts SQL disponíveis no diretório `supabase/`.
+
+   Para habilitar a gestão de usuários, aplique também:
+
+   ```text
+   supabase/migrations/20260824_user_management.sql
+   ```
 
 5. Inicie o ambiente de desenvolvimento:
 
@@ -172,6 +181,14 @@ O projeto continuará evoluindo à medida que avanço na revisão da implementa�
    ```text
    http://localhost:3000/login
    ```
+
+### Gestão de usuários
+
+Gestores ativos acessam **Configurações → Usuários e Acessos**. Nessa área é possível criar uma conta com senha inicial, definir `gestor` ou `vendedor`, editar nome e situação, e atribuir uma nova senha temporária.
+
+A primeira versão mantém o isolamento atual do sistema: cada gestor administra somente usuários da própria filial. A criação é realizada por uma rota do servidor, que valida novamente a sessão, o cargo, a situação e a filial antes de utilizar a Admin API do Supabase. Se a criação do perfil falhar depois da criação no Auth, a conta é removida automaticamente para não deixar cadastros incompletos.
+
+Senhas nunca são armazenadas em `profiles` ou na auditoria. Um gestor pode definir uma senha inicial ou temporária, mas não consultar uma senha existente. Contas desativadas ficam bloqueadas no Supabase Auth e no acesso às rotas protegidas.
 
 ### Comandos disponíveis
 

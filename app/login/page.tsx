@@ -21,10 +21,30 @@ export default function LoginPage() {
     setCarregando(true)
     setErro('')
 
-    const { error } = await supabase.auth.signInWithPassword({ email, password })
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password })
 
     if (error) {
       setErro('Email ou senha incorretos')
+      setCarregando(false)
+      return
+    }
+
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('ativo')
+      .eq('id', data.user.id)
+      .single()
+
+    if (!profile) {
+      await supabase.auth.signOut()
+      setErro('Seu usuário ainda não possui perfil, cargo e filial. Procure um gestor.')
+      setCarregando(false)
+      return
+    }
+
+    if (profile.ativo === false) {
+      await supabase.auth.signOut()
+      setErro('Este usuário está inativo. Procure um gestor.')
       setCarregando(false)
       return
     }

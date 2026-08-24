@@ -51,6 +51,25 @@ export default function Configuracoes() {
 
       <main className="max-w-3xl mx-auto px-6 py-8 flex flex-col gap-4">
         <button
+          onClick={() => router.push('/dashboard/configuracoes/usuarios')}
+          className="w-full rounded-2xl border p-6 flex items-center gap-4 text-left transition-all"
+          style={{ backgroundColor: '#111', borderColor: '#1f1f1f' }}
+          onMouseEnter={e => e.currentTarget.style.borderColor = '#c8960c44'}
+          onMouseLeave={e => e.currentTarget.style.borderColor = '#1f1f1f'}>
+          <div className="w-14 h-14 rounded-2xl flex items-center justify-center text-2xl flex-shrink-0"
+            style={{ backgroundColor: '#1a1a1a' }}>
+            👥
+          </div>
+          <div>
+            <h2 className="font-bold text-white text-lg">Usuários e Acessos</h2>
+            <p className="text-sm mt-0.5" style={{ color: '#666' }}>
+              Crie usuários, defina cargos, filial e situação de acesso
+            </p>
+          </div>
+          <div className="ml-auto text-xl" style={{ color: '#c8960c' }}>→</div>
+        </button>
+
+        <button
           onClick={() => router.push('/dashboard/configuracoes/taxas')}
           className="w-full rounded-2xl border p-6 flex items-center gap-4 text-left transition-all"
           style={{ backgroundColor: '#111', borderColor: '#1f1f1f' }}

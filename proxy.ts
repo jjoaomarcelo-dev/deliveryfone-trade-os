@@ -24,24 +24,37 @@ export async function proxy(request: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser()
   const { pathname } = request.nextUrl
 
+  const { data: profile } = user
+    ? await supabase
+        .from('profiles')
+        .select('cargo, store_id, ativo')
+        .eq('id', user.id)
+        .single()
+    : { data: null }
+
   if (!user && pathname.startsWith('/dashboard')) {
     return NextResponse.redirect(new URL('/login', request.url))
   }
 
-  if (user && pathname === '/login') {
+  if (user && (!profile || profile.ativo === false)) {
+    if (pathname !== '/login') {
+      return NextResponse.redirect(new URL('/login?erro=acesso', request.url))
+    }
+    return supabaseResponse
+  }
+
+  if (user && profile && pathname === '/login') {
     return NextResponse.redirect(new URL('/dashboard/estoque', request.url))
   }
 
   if (user && (pathname === '/dashboard/novo-produto' || pathname.startsWith('/dashboard/editar-produto/'))) {
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('cargo')
-      .eq('id', user.id)
-      .single()
-
     if (profile?.cargo !== 'gestor') {
       return NextResponse.redirect(new URL('/dashboard/estoque', request.url))
     }
+  }
+
+  if (user && pathname.startsWith('/dashboard/configuracoes') && profile?.cargo !== 'gestor') {
+    return NextResponse.redirect(new URL('/dashboard', request.url))
   }
 
   return supabaseResponse
