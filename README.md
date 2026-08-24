@@ -1,143 +1,166 @@
-# Deliveryfone Trade OS
+# DeliveryFone Trade OS
 
-Sistema web em desenvolvimento, criado a partir de necessidades reais de uma operação de varejo de telefonia. A proposta é centralizar em um único ambiente processos que fazem parte da rotina da loja, conectando gestores e vendedores na gestão de estoque, formação de preços, simulações, vendas, avaliação de aparelhos usados e comunicação interna.
+> Gestão inteligente de estoque e vendas para operações de varejo de telefonia.
 
-## Origem do projeto
+O **DeliveryFone Trade OS** é uma aplicação web criada a partir de necessidades reais da rotina de uma loja de celulares. O sistema centraliza estoque, formação de preços, simulações, vendas, avaliação de aparelhos usados, relatórios e configurações operacionais em um único ambiente, com acessos distintos para gestores e vendedores.
 
-A ideia surgiu durante minha experiência na gestão de uma loja de celulares. No dia a dia, comecei a identificar problemas que dificultavam tanto o trabalho dos vendedores quanto o controle da operação pelos gestores.
+O projeto nasceu como evolução de controles construídos inicialmente no Google Sheets e hoje funciona como uma base operacional integrada, com autenticação, regras por filial e persistência de dados no Supabase.
 
-A loja já utilizava um ERP, mas algumas necessidades específicas da rotina comercial ainda dependiam de consultas, controles paralelos e informações que não estavam disponíveis da forma que a equipe precisava. Antes de criar uma solução própria, busquei adaptar esses processos às ferramentas já utilizadas pela loja, inclusive solicitando relatórios específicos, mas algumas necessidades continuaram sem uma solução adequada para aquele fluxo de trabalho.
+> **Repositório de portfólio:** esta versão pública apresenta a evolução técnica do projeto. Credenciais, dados reais da operação e configurações do ambiente de produção não fazem parte deste repositório.
 
-Informações como estoque, custos, fornecedores, preços, condições de pagamento, limites de desconto e avaliação de aparelhos usados acabavam distribuídas entre diferentes fontes. Isso fazia com que várias etapas de uma venda ainda dependessem da consulta ou confirmação de um gestor.
+## Visão geral
 
-Um dos primeiros problemas que identifiquei estava no cálculo das vendas parceladas. As taxas cobradas pelas operadoras das máquinas de cartão eram consideradas de uma forma que não garantia o valor líquido esperado pela loja. A partir disso, comecei a buscar uma maneira de calcular e disponibilizar esses valores de forma mais consistente para a equipe.
+![Tela de login do DeliveryFone Trade OS](docs/images/login.png)
 
-Minha primeira solução foi criar uma estrutura no Google Sheets. Nela passei a centralizar estoque, preços e informações dos aparelhos, além de automatizar cálculos de parcelamento, formação de preço e avaliação de aparelhos usados. Também mantinha informações de custos e fornecedores em uma área de controle da gestão.
+### Painel operacional
 
-As planilhas resolveram boa parte dos problemas iniciais, mas, com o uso diário, ficou claro que a operação ainda dependia muito dos gestores. Dúvidas sobre descontos, avaliações, condições de venda e outras decisões continuavam surgindo durante os atendimentos.
+O painel apresenta a situação do estoque por status e concentra os principais atalhos da operação.
 
-Foi a partir dessas limitações que nasceu a ideia do Deliveryfone Trade OS: transformar os processos que eu já vinha organizando em uma aplicação voltada para a rotina da loja, na qual gestores pudessem administrar as regras e informações da operação enquanto vendedores tivessem acesso ao que precisam para atender e vender com mais autonomia.
+![Painel principal com indicadores e atalhos](docs/images/painel.png)
 
-## Como o sistema está estruturado
+### Avaliação de aparelhos usados
 
-Atualmente, o Deliveryfone Trade OS está sendo desenvolvido em torno de dois perfis de usuário: gestor e vendedor. A proposta é que ambos trabalhem sobre a mesma operação e os mesmos dados, mas com acessos e responsabilidades diferentes.
+Fluxo guiado para estimar o valor de compra de um aparelho, considerando modelo, capacidade, cor, estado, peças e critérios configurados pela gestão. A avaliação é uma estimativa e prevê confirmação presencial por um técnico.
 
-A autenticação e o controle de usuários utilizam o Supabase, com cada perfil associado a uma loja.
+![Fluxo de avaliação de compra de celular](docs/images/avaliacao.png)
 
-### Gestor
+### Relatórios
 
-O perfil de gestor concentra o controle operacional e as informações restritas da loja, como custos, margens e configurações.
+Indicadores por período com vendas, receita, lucro, ticket médio, descontos e desempenho por vendedor.
 
-Entre os fluxos já presentes no projeto, o gestor pode:
+![Relatórios de vendas e desempenho](docs/images/relatorios.png)
 
-- cadastrar, editar e excluir produtos;
-- acompanhar o estoque por status e consultar o histórico de vendas;
-- registrar custos, origem, fornecedor, preços e promoções;
-- configurar taxas de parcelamento por operadora;
-- configurar valores e critérios usados na avaliação de aparelhos;
-- responder a pedidos de desconto enviados pelos vendedores;
-- confirmar vendas e acompanhar indicadores e vendas por vendedor.
+### Configurações administrativas
 
-### Vendedor
+Área reservada à gestão para administrar usuários e acessos, taxas de parcelamento e parâmetros de avaliação.
 
-O perfil de vendedor é voltado ao atendimento e à negociação. A proposta é permitir que ele encontre no próprio sistema as informações necessárias para conduzir uma venda, sem ter acesso aos dados financeiros e configurações restritas à gestão.
+![Configurações administrativas do sistema](docs/images/configuracoes.png)
 
-Entre os fluxos já presentes no projeto, o vendedor pode:
+## Destaques técnicos
 
-- consultar os produtos disponíveis e suas condições comerciais;
-- simular pagamentos à vista ou parcelados;
-- incluir um aparelho usado na negociação por meio do fluxo de avaliação;
-- salvar ou cancelar uma simulação vinculada ao produto;
-- reservar um aparelho;
-- registrar uma venda para posterior confirmação do gestor;
-- solicitar condições de desconto ao gestor;
-- conversar com o gestor no contexto de um produto;
-- consultar suas vendas confirmadas e indicadores de desempenho.
+- aplicação full stack com Next.js e TypeScript;
+- autenticação e persistência integradas ao Supabase;
+- autorização em múltiplas camadas: interface, middleware, servidor e banco;
+- separação de dados e permissões por filial;
+- rotas administrativas protegidas para gestão de usuários;
+- atualizações em tempo real para refletir mudanças operacionais;
+- testes automatizados sobre regras críticas do negócio;
+- versionamento com Git/GitHub e implantação contínua na Vercel;
+- variáveis de ambiente e credenciais mantidas fora do código público.
 
-A separação entre os perfis não é tratada apenas na interface. O projeto também utiliza políticas de Row Level Security (RLS) no banco de dados para controlar o acesso às informações de acordo com a loja e o perfil do usuário.
+## O problema que deu origem ao projeto
 
-## Funcionalidades implementadas
+Na rotina da loja, informações importantes ficavam distribuídas entre ERP, planilhas e consultas aos gestores. Custos, fornecedores, preços, taxas de cartão, limites de desconto e avaliações de aparelhos usados nem sempre estavam disponíveis de forma rápida para a equipe comercial.
 
-O projeto já possui implementação para os principais fluxos que deram origem à ideia, embora eles ainda estejam em processo de revisão, testes e evolução.
+A primeira solução foi uma estrutura no Google Sheets, com estoque e cálculos automatizados. Ela resolveu parte do problema, mas ainda exigia muitos controles paralelos e decisões centralizadas na gestão.
 
-Atualmente, estão presentes:
+O DeliveryFone Trade OS nasceu para transformar esses processos em uma aplicação única: o gestor configura as regras da operação e acompanha os resultados, enquanto o vendedor encontra as informações necessárias para atender e negociar com mais autonomia.
 
-- autenticação de usuários e recuperação de senha;
-- controle de acesso por perfil e loja;
-- estoque com busca, filtros e diferentes estados de produto;
-- cadastro de aparelhos novos e seminovos, com informações como IMEI, capacidade, cor, condição e bateria;
-- controle de custos, preços, promoções e tempo em estoque;
-- cálculo de vendas parceladas com base nas taxas configuradas;
-- configuração de taxas de parcelamento por loja e operadora;
-- simulação de vendas com diferentes formas de pagamento, entrada e aparelho usado na troca;
-- fluxo de reserva, registro e confirmação de vendas;
+## Funcionalidades
+
+- autenticação e recuperação de senha;
+- usuários associados a uma filial, com cargos de gestor e vendedor;
+- criação, edição, ativação e desativação de usuários dentro do aplicativo;
+- estoque com pesquisa, filtros e estados operacionais;
+- cadastro de aparelhos novos e seminovos;
+- registro de IMEI, capacidade, cor, condição, bateria, custo, fornecedor e origem;
+- preços, promoções e acompanhamento do tempo em estoque;
+- cálculo de parcelamento com taxas configuráveis por operadora;
+- simulação de vendas com entrada, parcelamento e aparelho usado na troca;
+- reserva, registro e confirmação de vendas;
 - avaliação prévia de aparelhos usados com critérios configuráveis;
 - histórico de avaliações;
 - solicitações de desconto com aprovação, recusa ou contraproposta;
-- mensagens e notificações vinculadas ao fluxo comercial;
-- relatórios com informações de vendas, margem, ticket médio e descontos, além de exportação em CSV.
+- relatórios de vendas, receita, lucro, ticket médio e descontos;
+- desempenho por vendedor e exportação de dados em CSV.
 
-## Regras de negócio
+## Perfis e permissões
 
-Grande parte das regras do sistema surgiu de situações encontradas na rotina da operação. Entre as principais estão:
+### Gestor
 
-- o valor de uma venda parcelada é calculado considerando a taxa da operadora, buscando preservar o valor líquido esperado pela loja;
-- custos, margens e outras informações financeiras ficam restritos ao perfil de gestor;
-- uma venda registrada pelo vendedor não retira automaticamente o produto do estoque: ela permanece aguardando a conferência e confirmação do gestor;
-- reservas e vendas consideram o estado atual do produto para reduzir conflitos sobre o mesmo aparelho;
-- condições de desconto fora dos limites disponíveis para o vendedor seguem um fluxo de solicitação e aprovação pelo gestor;
-- a avaliação de um aparelho usado funciona como uma estimativa inicial e pode depender de conferência presencial antes da negociação;
-- usuários são associados a uma loja, e as permissões no banco ajudam a restringir o acesso aos dados daquela operação.
+O gestor administra a operação da própria filial. Entre suas responsabilidades estão:
 
-## Tecnologias presentes no projeto
+- gerenciar usuários, cargos e situação de acesso;
+- cadastrar e editar produtos;
+- consultar custos, fornecedores, margens e histórico;
+- configurar taxas de parcelamento e critérios de avaliação;
+- acompanhar vendas, descontos e indicadores;
+- confirmar operações registradas pelos vendedores.
 
-- Next.js 16 e React 19;
-- TypeScript;
-- Tailwind CSS 4;
-- Supabase (autenticação, PostgreSQL, Row Level Security e Realtime);
-- Jest e ts-jest para testes unitários;
-- ESLint.
+### Vendedor
 
-## Desenvolvimento e aprendizado
+O vendedor trabalha com as informações necessárias ao atendimento, sem acesso às configurações e aos dados financeiros restritos à gestão. Ele pode:
 
-A definição do problema, dos fluxos e das regras de negócio partiu da minha experiência direta com a operação. Para transformar essa ideia em uma aplicação, utilizei ferramentas de inteligência artificial como apoio durante o desenvolvimento, principalmente na geração de código, implementação das funcionalidades e investigação de problemas.
+- consultar aparelhos e condições comerciais;
+- simular pagamentos;
+- incluir aparelho usado em uma negociação;
+- reservar produtos e registrar vendas;
+- solicitar condições de desconto;
+- consultar suas vendas e seus indicadores.
 
-O projeto também faz parte do meu processo de desenvolvimento técnico. Atualmente, estudo os fundamentos das tecnologias utilizadas e reviso a implementação para compreender como cada parte do sistema funciona, desde a lógica da aplicação até sua integração com o banco de dados.
+## Regras de negócio importantes
 
-Esse processo tem como objetivo transformar o projeto não apenas em uma solução para os problemas que deram origem a ele, mas também em uma base prática para desenvolver minha autonomia em programação e evoluir tecnicamente a aplicação.
+- o cálculo parcelado considera a taxa da operadora para preservar o valor líquido esperado pela loja;
+- custos, margens e configurações ficam restritos ao gestor;
+- uma venda registrada pelo vendedor aguarda conferência antes de ser confirmada;
+- reservas e vendas validam o estado atual do aparelho para reduzir conflitos;
+- descontos fora da autonomia do vendedor passam por aprovação da gestão;
+- a avaliação de usados é uma estimativa inicial sujeita à conferência presencial;
+- usuários e dados operacionais são isolados por filial;
+- aparelhos vendidos permanecem registrados para histórico e relatórios.
 
-## Estado atual
+## Segurança e integridade
 
-O Deliveryfone Trade OS está em desenvolvimento. Diversos fluxos que fazem parte da proposta do sistema já possuem implementação, mas o projeto continua passando por revisão, testes e evolução.
+A aplicação combina diferentes camadas de proteção:
 
-Nesta etapa, além de evoluir as funcionalidades, estou revisando a estrutura e o código existente para compreender melhor a implementação e identificar melhorias que possam ser feitas à medida que avanço nos estudos.
+- autenticação pelo Supabase Auth;
+- autorização por cargo no servidor e nas rotas protegidas;
+- isolamento dos usuários pela filial associada ao perfil;
+- Row Level Security (RLS) no PostgreSQL;
+- chave administrativa utilizada exclusivamente no servidor;
+- senhas nunca armazenadas em tabelas de perfil ou auditoria;
+- desativação de contas aplicada no Auth e no acesso ao sistema;
+- registro de ações administrativas relevantes;
+- arquivos de ambiente e credenciais fora do versionamento.
 
-O repositório também possui migrações do Supabase e testes unitários voltados a regras de cálculo financeiro, taxas, avaliação de aparelhos e funções auxiliares.
+## Tecnologias
 
-## Próximos passos
+- **Next.js 16** e **React 19**;
+- **TypeScript**;
+- **Tailwind CSS 4**;
+- **Supabase**: Auth, PostgreSQL, Row Level Security e Realtime;
+- **Jest** e **ts-jest**;
+- **ESLint**;
+- **Vercel** para implantação contínua.
 
-O projeto continuará evoluindo à medida que avanço na revisão da implementação e no desenvolvimento dos meus conhecimentos técnicos. Algumas ideias previstas para a evolução do Trade OS são:
+## Arquitetura resumida
 
-- aprimorar os fluxos e funcionalidades já implementados;
-- revisar e melhorar a organização e a estrutura do código;
-- ampliar a cobertura de testes;
-- desenvolver um catálogo de produtos com fotos e vídeos próprios para cada item, permitindo que o vendedor acesse rapidamente essas mídias e compartilhe com o cliente, especialmente o vídeo do produto específico, durante a venda;
-- desenvolver um sistema interno de tarefas, permitindo que gestores atribuam atividades aos funcionários e acompanhem sua conclusão;
-- utilizar os dados das tarefas e da operação para ampliar os indicadores disponíveis aos gestores;
-- evoluir a comunicação interna entre gestores e vendedores;
-- melhorar a experiência de uso e a adaptação do sistema para diferentes dispositivos.
+```text
+Navegador
+   │
+   ▼
+Next.js (interface, middleware e rotas do servidor)
+   │
+   ├── Supabase Auth (sessões e contas)
+   ├── PostgreSQL + RLS (dados e permissões)
+   └── Realtime (atualizações da operação)
+```
+
+As operações administrativas são validadas novamente no servidor. A interface não é considerada uma barreira de segurança: cargo, situação e filial do usuário são conferidos antes de qualquer ação privilegiada.
 
 ## Executando localmente
+
+O código pode ser analisado e executado localmente, mas as funcionalidades dependem de um projeto Supabase compatível. O ambiente operacional utilizado nos testes da loja é privado e não acompanha esta versão de portfólio.
 
 ### Pré-requisitos
 
 - Node.js;
 - npm;
-- um projeto no Supabase configurado com a estrutura de banco de dados utilizada pela aplicação.
+- projeto Supabase com a estrutura usada pela aplicação.
 
-### Configuração
+### Instalação
 
-1. Clone o repositório e acesse a pasta do projeto:
+1. Clone o repositório e acesse a pasta:
 
    ```bash
    git clone <URL_DO_REPOSITORIO>
@@ -150,52 +173,65 @@ O projeto continuará evoluindo à medida que avanço na revisão da implementa�
    npm install
    ```
 
-3. Crie um arquivo `.env.local` na raiz do projeto e configure as variáveis de ambiente do Supabase:
+3. Crie `.env.local` na raiz:
 
    ```env
    NEXT_PUBLIC_SUPABASE_URL=sua_url_do_supabase
    NEXT_PUBLIC_SUPABASE_ANON_KEY=sua_chave_anonima_do_supabase
-   SUPABASE_SERVICE_ROLE_KEY=sua_chave_service_role
+   SUPABASE_SERVICE_ROLE_KEY=sua_chave_administrativa
    ```
 
-   O arquivo `.env.local` não é versionado no repositório. As credenciais devem ser obtidas no projeto correspondente no Supabase.
+   `SUPABASE_SERVICE_ROLE_KEY` deve existir somente no servidor. Nunca use o prefixo `NEXT_PUBLIC_`, exponha a chave no navegador ou inclua o arquivo de ambiente em commits.
 
-   `SUPABASE_SERVICE_ROLE_KEY` é usada exclusivamente pelas rotas administrativas do servidor para criar contas e atualizar o Supabase Auth. Ela nunca deve receber o prefixo `NEXT_PUBLIC_`, ser colocada em código cliente, enviada em mensagens ou incluída em commits. Na Vercel, cadastre-a como variável protegida nos ambientes necessários.
-
-4. Configure o banco de dados utilizando os scripts SQL disponíveis no diretório `supabase/`.
-
-   Para habilitar a gestão de usuários, aplique também:
+4. Aplique os scripts SQL de `supabase/`, incluindo a migração de gestão de usuários:
 
    ```text
    supabase/migrations/20260824_user_management.sql
    ```
 
-5. Inicie o ambiente de desenvolvimento:
+5. Inicie o projeto:
 
    ```bash
    npm run dev
    ```
 
-6. Acesse a aplicação em:
+6. Acesse `http://localhost:3000/login`.
 
-   ```text
-   http://localhost:3000/login
-   ```
-
-### Gestão de usuários
-
-Gestores ativos acessam **Configurações → Usuários e Acessos**. Nessa área é possível criar uma conta com senha inicial, definir `gestor` ou `vendedor`, editar nome e situação, e atribuir uma nova senha temporária.
-
-A primeira versão mantém o isolamento atual do sistema: cada gestor administra somente usuários da própria filial. A criação é realizada por uma rota do servidor, que valida novamente a sessão, o cargo, a situação e a filial antes de utilizar a Admin API do Supabase. Se a criação do perfil falhar depois da criação no Auth, a conta é removida automaticamente para não deixar cadastros incompletos.
-
-Senhas nunca são armazenadas em `profiles` ou na auditoria. Um gestor pode definir uma senha inicial ou temporária, mas não consultar uma senha existente. Contas desativadas ficam bloqueadas no Supabase Auth e no acesso às rotas protegidas.
-
-### Comandos disponíveis
+## Comandos
 
 ```bash
-npm run dev       # inicia o ambiente de desenvolvimento
-npm run build     # gera o build de produção
-npm run start     # executa o build de produção
-npm run lint      # executa a análise estática do código
-npm test          # executa os testes unitários
+npm run dev       # ambiente de desenvolvimento
+npm run build     # build de produção
+npm run start     # executa o build
+npm run lint      # análise estática
+npm test          # testes unitários
+npm run test:watch
 ```
+
+## Qualidade
+
+O projeto possui testes automatizados para cálculos financeiros, taxas, avaliação de aparelhos, funções auxiliares e regras de gerenciamento de usuários. Antes de cada publicação, o fluxo recomendado é executar testes, análise estática e build de produção.
+
+## Estado atual
+
+O sistema está em desenvolvimento e já possui um ambiente privado de teste para validação no dia a dia da operação. Os fluxos existentes continuam sendo revisados conforme o uso real aponta ajustes de experiência, regras e segurança.
+
+## Próximos passos
+
+- ampliar a cobertura de testes e os cenários de integração;
+- implementar rotina de backup externo e políticas de recuperação;
+- evoluir o histórico de alterações e a rastreabilidade das operações;
+- aprimorar a experiência em dispositivos móveis;
+- adicionar catálogo de mídia por aparelho;
+- desenvolver tarefas internas para gestores e vendedores;
+- ampliar indicadores comerciais e operacionais.
+
+## Desenvolvimento e aprendizado
+
+A definição do problema, dos fluxos e das regras de negócio partiu da experiência direta do autor com a gestão de uma loja de celulares. Ferramentas de inteligência artificial foram utilizadas como apoio na implementação, revisão e investigação de problemas.
+
+O projeto também funciona como uma base prática de aprendizado em desenvolvimento web, banco de dados, segurança, testes, Git/GitHub e implantação contínua. O objetivo é evoluir a solução ao mesmo tempo em que aumenta a compreensão e a autonomia técnica sobre cada parte do sistema.
+
+---
+
+**DeliveryFone Trade OS** — Gestão inteligente de estoque e vendas.
