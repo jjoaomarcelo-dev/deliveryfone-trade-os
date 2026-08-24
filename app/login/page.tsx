@@ -86,7 +86,7 @@ export default function LoginPage() {
             <h1 className="text-3xl font-black text-white tracking-tight">
               Delivery<span style={{ color: '#c8960c' }}>Fone</span>
             </h1>
-            <p className="text-sm mt-1" style={{ color: '#666' }}>Sistema de Estoque</p>
+            <p className="text-sm mt-1" style={{ color: '#666' }}>Gestão inteligente de estoque e vendas</p>
           </div>
 
           {/* ── LOGIN ── */}
@@ -229,7 +229,7 @@ export default function LoginPage() {
 
         {/* Rodapé */}
         <p className="text-center text-xs mt-6" style={{ color: '#444' }}>
-          DeliveryFone © 2025 — Todos os direitos reservados
+          DeliveryFone © {new Date().getFullYear()} — Todos os direitos reservados
         </p>
       </div>
     </div>
