@@ -38,6 +38,19 @@ describe('parseBRL', () => {
   test('converte valor inteiro sem formatação', () => {
     expect(parseBRL('5000')).toBe(5000)
   })
+
+  test('converte valor com símbolo de moeda', () => {
+    expect(parseBRL('R$ 2.500,00')).toBe(2500)
+  })
+
+  test('converte valor com símbolo de moeda sem espaço', () => {
+    expect(parseBRL('R$2.500,00')).toBe(2500)
+  })
+
+  test('converte valor com espaços nas extremidades', () => {
+    expect(parseBRL(' 2.500,00 ')).toBe(2500)
+  })
+
 })
 
 // ─── fmt ──────────────────────────────────────────────────────────────────────

@@ -10,7 +10,13 @@ export function fmt(valor: number): string {
 
 /** Converte string no formato BRL para número — ex: "2.500,00" → 2500 */
 export function parseBRL(s: string): number {
-  return parseFloat(s.replace(/\./g, '').replace(',', '.')) || 0
+  return parseFloat(
+    s
+      .replace(/R\$\s?/g, '')
+      .replace(/\./g, '')
+      .replace(',', '.')
+      .trim()
+  ) || 0
 }
 
 /** Converte o desconto máximo informado no preço mínimo à vista armazenado. */
