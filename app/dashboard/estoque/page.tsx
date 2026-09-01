@@ -140,7 +140,7 @@ interface Simulacao {
 
 
 export default function Estoque() {
-  const { toasts, remover: removerToast, erro: toastErro, sucesso: toastSucesso, aviso: toastAviso } = useToast()
+  const {toasts, remover: removerToast, erro: toastErro, aviso: toastAviso } = useToast()
   const [cargo, setCargo] = useState('')
   const [userId, setUserId] = useState('')
   const [nomeUsuario, setNomeUsuario] = useState('')
