@@ -1039,10 +1039,6 @@ export default function Estoque() {
     setNotificacoes(prev => prev.filter(n => !ids.includes(n.id)))
   }
 
-  function calcParcelado(preco: number, taxa_comercial: number) {
-    return preco * (1 + taxa_comercial / 100)
-  }
-
   // Categorias presentes no estoque (dinâmico)
   const categoriasPresentes = useMemo(
     () => ['todos', ...Array.from(new Set(produtos.map(p => p.categoria).filter(Boolean)))],
