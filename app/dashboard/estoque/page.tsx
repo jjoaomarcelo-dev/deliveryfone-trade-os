@@ -2349,13 +2349,6 @@ export default function Estoque() {
               <div className="flex flex-wrap gap-1.5">
                 {opList.map(j => {
                   const ativo = parcelasVenda === j.parcelas
-                  // Preview: se tiver base, mostra valor por parcela
-                  const baseNum = parseFloat(valorBaseVendedor)
-                  const descontoNum = parseBRL(descontoVendedor)
-                  const gross = (!isNaN(baseNum) && baseNum > 0)
-                    ? calcGrossFromBase(baseNum, descontoNum, formaPagamento, j.parcelas)
-                    : (parseBRL(valorVendaVendedor))
-                  const porParcela = gross > 0 && j.parcelas > 0 ? gross / j.parcelas : 0
                   return (
                     <button key={j.parcelas}
                       onClick={() => {
