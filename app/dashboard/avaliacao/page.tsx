@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation'
 import { SpinnerPage } from '../../components/Spinner'
 import { useToast, ToastContainer } from '../../components/Toast'
 import { fmt } from '../../lib/utils'
-import SeletorPilulas from '../../components/SeletorPilulas'
+import SeletorPilulas from '../../components/ui/SeletorPilulas'
 import {
   MARCA,
   modelos,

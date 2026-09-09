@@ -8,7 +8,7 @@ import { dataHoje, diasNoEstoque, descontoMaximoAvista, precoMinimoAvista } from
 import { type Juros, TAXA_REAL_FALLBACK, calcParcelado } from '../../../lib/financeiro'
 import { getTaxasAtivas } from '../../../lib/taxas'
 import { SpinnerPage } from '../../../components/Spinner'
-import SeletorPilulas from '../../../components/SeletorPilulas'
+import SeletorPilulas from '../../../components/ui/SeletorPilulas'
 
 interface Props {
   produtoId?: string
