@@ -4,7 +4,7 @@ import { useEffect, useState, useMemo, useRef } from 'react'
 import { createClient } from '../../lib/supabase'
 import { useRouter } from 'next/navigation'
 import { SpinnerPage } from '../../components/Spinner'
-import { useToast, ToastContainer } from '../../components/Toast'
+import { useToast, ToastContainer } from '../../components/ui/Toast'
 import { fmt } from '../../lib/utils'
 import SeletorPilulas from '../../components/ui/SeletorPilulas'
 import {

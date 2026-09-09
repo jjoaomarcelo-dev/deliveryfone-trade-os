@@ -4,7 +4,7 @@ import { useEffect, useState, useMemo } from 'react'
 import { createClient } from '../../../lib/supabase'
 import { useRouter } from 'next/navigation'
 import { SpinnerPage } from '../../../components/Spinner'
-import { useToast, ToastContainer } from '../../../components/Toast'
+import { useToast, ToastContainer } from '../../../components/ui/Toast'
 import { invalidateAvaliacao, PECAS, modelos, capacidadesDe } from '../../../lib/avaliacao'
 import type { CondicaoAvaliacao } from '../../../lib/avaliacao'
 
