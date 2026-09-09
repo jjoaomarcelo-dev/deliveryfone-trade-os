@@ -1,6 +1,6 @@
 'use client'
 
-import ProdutoForm from '../../components/ProdutoForm'
+import ProdutoForm from '../../features/products/components/ProdutoForm'
 
 export default function NovoProduto() {
   return <ProdutoForm />

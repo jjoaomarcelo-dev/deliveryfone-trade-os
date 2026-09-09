@@ -1,14 +1,14 @@
 'use client'
 
 import { useEffect, useState, useMemo } from 'react'
-import { createClient } from '../lib/supabase'
+import { createClient } from '../../../lib/supabase'
 import { useRouter } from 'next/navigation'
-import { MODELOS_IPHONE, GB_IPHONE, CORES_IPHONE } from '../lib/iphone-data'
-import { dataHoje, diasNoEstoque, descontoMaximoAvista, precoMinimoAvista } from '../lib/utils'
-import { type Juros, TAXA_REAL_FALLBACK, calcParcelado } from '../lib/financeiro'
-import { getTaxasAtivas } from '../lib/taxas'
-import { SpinnerPage } from './Spinner'
-import SeletorPilulas from './SeletorPilulas'
+import { MODELOS_IPHONE, GB_IPHONE, CORES_IPHONE } from '../../../lib/iphone-data'
+import { dataHoje, diasNoEstoque, descontoMaximoAvista, precoMinimoAvista } from '../../../lib/utils'
+import { type Juros, TAXA_REAL_FALLBACK, calcParcelado } from '../../../lib/financeiro'
+import { getTaxasAtivas } from '../../../lib/taxas'
+import { SpinnerPage } from '../../../components/Spinner'
+import SeletorPilulas from '../../../components/SeletorPilulas'
 
 interface Props {
   produtoId?: string
