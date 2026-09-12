@@ -1,4 +1,4 @@
-import { createAdminClient, createAuthenticatedServerClient } from './supabase-server'
+import { createAdminClient, createAuthenticatedServerClient } from './supabase/server'
 
 export interface ManagerContext {
   id: string
