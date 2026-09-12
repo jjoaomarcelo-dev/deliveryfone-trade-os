@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { createClient } from '../../../lib/supabase'
+import { createClient } from '../../../lib/supabase/client'
 import { SpinnerPage } from '../../../components/ui/Spinner'
 import type { Cargo } from '../../../lib/user-management'
 

@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState, useMemo } from 'react'
-import { createClient } from '../../../lib/supabase'
+import { createClient } from '../../../lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import { MODELOS_IPHONE, GB_IPHONE, CORES_IPHONE } from '../../../lib/iphone-data'
 import { dataHoje, diasNoEstoque, descontoMaximoAvista, precoMinimoAvista } from '../../../lib/utils'

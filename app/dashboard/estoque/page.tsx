@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useRef, useMemo } from 'react'
 import { createPortal } from 'react-dom'
-import { createClient } from '../../lib/supabase'
+import { createClient } from '../../lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import { dataHoje, fmt, parseBRL, diasNoEstoque } from '../../lib/utils'
 import { type Juros, TAXA_REAL_FALLBACK } from '../../lib/financeiro'

@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState, useMemo, useRef } from 'react'
-import { createClient } from '../../../lib/supabase'
+import { createClient } from '../../../lib/supabase/client'
 import { useRouter, useParams } from 'next/navigation'
 import { SpinnerPage } from '../../../components/ui/Spinner'
 import { useToast, ToastContainer } from '../../../components/ui/Toast'
