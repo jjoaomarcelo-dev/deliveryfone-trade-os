@@ -7,7 +7,7 @@ import { MODELOS_IPHONE, GB_IPHONE, CORES_IPHONE } from '../../../lib/iphone-dat
 import { dataHoje, diasNoEstoque, descontoMaximoAvista, precoMinimoAvista } from '../../../lib/utils'
 import { type Juros, TAXA_REAL_FALLBACK, calcParcelado } from '../../../lib/financeiro'
 import { getTaxasAtivas } from '../../../lib/taxas'
-import { SpinnerPage } from '../../../components/Spinner'
+import { SpinnerPage } from '../../../components/ui/Spinner'
 import SeletorPilulas from '../../../components/ui/SeletorPilulas'
 
 interface Props {

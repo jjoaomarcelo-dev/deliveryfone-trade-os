@@ -4,7 +4,7 @@ import { useEffect, useState, useCallback, useMemo } from 'react'
 import { createClient } from '../../lib/supabase'
 import { useRouter } from 'next/navigation'
 import { fmt, dataHoje } from '../../lib/utils'
-import { SpinnerPage } from '../../components/Spinner'
+import { SpinnerPage } from '../../components/ui/Spinner'
 
 // ─── Tipos ───────────────────────────────────────────────────────────────────
 

@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '../../../lib/supabase'
-import { SpinnerPage } from '../../../components/Spinner'
+import { SpinnerPage } from '../../../components/ui/Spinner'
 import type { Cargo } from '../../../lib/user-management'
 
 interface ManagedUser {

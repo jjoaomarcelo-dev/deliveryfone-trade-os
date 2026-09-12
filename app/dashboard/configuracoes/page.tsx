@@ -3,7 +3,7 @@
 import { useEffect, useState, useMemo } from 'react'
 import { createClient } from '../../lib/supabase'
 import { useRouter } from 'next/navigation'
-import { SpinnerPage } from '../../components/Spinner'
+import { SpinnerPage } from '../../components/ui/Spinner'
 
 export default function Configuracoes() {
   const router = useRouter()

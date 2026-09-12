@@ -8,7 +8,7 @@ import { dataHoje, fmt, parseBRL, diasNoEstoque } from '../../lib/utils'
 import { type Juros, TAXA_REAL_FALLBACK } from '../../lib/financeiro'
 import { getTaxasAtivas } from '../../lib/taxas'
 import { useToast, ToastContainer } from '../../components/ui/Toast'
-import { SpinnerPage } from '../../components/Spinner'
+import { SpinnerPage } from '../../components/ui/Spinner'
 
 const STATUS_CONFIG: Record<string, { label: string; cor: string; bg: string; emoji: string }> = {
   disponivel: { label: 'Disponível',  cor: '#4ade80', bg: '#4ade8018', emoji: '🟢' },
