@@ -475,7 +475,7 @@ export default function Estoque() {
       if (chChat)    supabase.removeChannel(chChat)
       if (chProdutos) supabase.removeChannel(chProdutos)
     }
-  }, [])
+  }, [router, supabase])
 
   async function alterarStatus(produtoId: string, novoStatus: string) {
     const { error } = await supabase
@@ -2878,7 +2878,6 @@ export default function Estoque() {
       {/* ═══ Modal: Chat por Produto ═══ */}
       {modalChat && (() => {
         const p = produtos.find(x => x.id === modalChat)
-        const msgRef = { current: null as HTMLDivElement | null }
 
         function fmtHora(iso: string) {
           return new Date(iso).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })
