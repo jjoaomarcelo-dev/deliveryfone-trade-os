@@ -18,6 +18,24 @@ A implementação técnica foi desenvolvida com apoio de ferramentas de intelig�
 
 Como desenvolvedor front-end júnior, meu foco no projeto está na construção das interfaces, na experiência de uso e na compreensão do código utilizado em cada fluxo.
 
+## Demonstração
+
+Os vídeos apresentam o sistema em uso nos dois perfis de acesso. A demonstração começa pela experiência do vendedor, principal usuário do fluxo comercial, e depois mostra os recursos de configuração e acompanhamento disponíveis ao gestor.
+
+### Visão do vendedor
+
+[Assistir à demonstração do vendedor](docs/videos/deliveryfone-vendedor.mp4)
+
+Consulta do estoque, avaliação de aparelho usado, criação de diferentes simulações para clientes, reserva e registro de venda com formas de pagamento distintas.
+
+### Visão do gestor
+
+[Assistir à demonstração do gestor](docs/videos/deliveryfone-gestor.mp4)
+
+Cadastro e precificação de produtos, acompanhamento de margens estimadas, confirmação de vendas, indicadores e configuração das regras utilizadas pela equipe.
+
+> **Dados de demonstração:** usuários, IMEIs, produtos, preços, custos, taxas, juros e margens exibidos são fictícios. Os valores são configuráveis e os cenários têm finalidade exclusivamente demonstrativa, sem representar operações comerciais ou fiscais reais. A taxa tributária mostrada pelo sistema é apenas uma estimativa gerencial para apoiar a precificação; ela não substitui cálculo contábil ou orientação fiscal.
+
 ## Funcionalidades
 
 - login e recuperação de senha;
@@ -33,38 +51,6 @@ Como desenvolvedor front-end júnior, meu foco no projeto está na construção 
 - solicitação e aprovação de descontos;
 - gerenciamento de usuários;
 - indicadores comerciais e exportação em CSV.
-
-## Telas
-
-### Login
-
-Autenticação dos usuários e recuperação de senha.
-
-![Tela de login do DeliveryFone Trade OS](docs/images/login.png)
-
-### Painel principal
-
-Resumo da situação dos aparelhos no estoque e acesso aos principais fluxos comerciais.
-
-![Painel principal com indicadores e atalhos](docs/images/painel.png)
-
-### Avaliação de aparelhos
-
-Formulário para estimar o valor de um aparelho usado e considerar esse valor na negociação.
-
-![Fluxo de avaliação de compra de celular](docs/images/avaliacao.png)
-
-### Relatórios
-
-Consulta de indicadores por período e por vendedor para acompanhar o resultado das negociações.
-
-![Relatórios de vendas e desempenho](docs/images/relatorios.png)
-
-### Configurações
-
-Área do gestor para administrar usuários e definir taxas de pagamento e critérios de avaliação.
-
-![Configurações administrativas do sistema](docs/images/configuracoes.png)
 
 ## Tecnologias
 
