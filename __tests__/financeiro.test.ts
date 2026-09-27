@@ -1,4 +1,4 @@
-import { calcParcelado, TAXA_REAL_FALLBACK } from '../app/lib/financeiro'
+import { calcParcelado, calcParceladoComEntrada, TAXA_REAL_FALLBACK } from '../app/lib/financeiro'
 
 // ─── calcParcelado ────────────────────────────────────────────────────────────
 
@@ -21,6 +21,20 @@ describe('calcParcelado', () => {
 
   test('preço zero retorna zero', () => {
     expect(calcParcelado(0, 14)).toBe(0)
+  })
+})
+
+describe('calcParceladoComEntrada', () => {
+  test('desconta a entrada antes de aplicar a taxa da maquininha', () => {
+    expect(calcParceladoComEntrada(3500, 0, 1000, 12)).toBe(2800)
+  })
+
+  test('considera desconto e entrada no saldo parcelado', () => {
+    expect(calcParceladoComEntrada(3500, 200, 1000, 12)).toBe(2576)
+  })
+
+  test('não permite saldo parcelado negativo', () => {
+    expect(calcParceladoComEntrada(3500, 0, 4000, 12)).toBe(0)
   })
 })
 

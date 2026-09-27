@@ -19,6 +19,17 @@ export function calcParcelado(preco: number, taxa_comercial: number): number {
   return preco * (1 + taxa_comercial / 100)
 }
 
+/** Calcula o valor levado à maquininha depois de desconto e entrada à vista. */
+export function calcParceladoComEntrada(
+  preco: number,
+  desconto: number,
+  entrada: number,
+  taxaComercial: number
+): number {
+  const saldo = Math.max(0, preco - Math.max(0, desconto) - Math.max(0, entrada))
+  return Number(calcParcelado(saldo, taxaComercial).toFixed(2))
+}
+
 /**
  * Valor parcelado por gross-up da taxa da operadora repassada ao cliente:
  *   valorParcelado = valorVista / (1 - taxa/100)

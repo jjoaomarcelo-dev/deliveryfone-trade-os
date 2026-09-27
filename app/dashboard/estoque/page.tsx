@@ -5,7 +5,7 @@ import { createPortal } from 'react-dom'
 import { createClient } from '../../lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import { dataHoje, fmt, parseBRL, diasNoEstoque } from '../../lib/utils'
-import { type Juros, TAXA_REAL_FALLBACK } from '../../lib/financeiro'
+import { calcParceladoComEntrada, type Juros, TAXA_REAL_FALLBACK } from '../../lib/financeiro'
 import { getTaxasAtivas } from '../../lib/taxas'
 import { calcularValorAposTributos, getTaxaTributariaEstimada, TAXA_TRIBUTARIA_ESTIMADA_PADRAO } from '../../lib/tributos'
 import { useToast, ToastContainer } from '../../components/ui/Toast'
@@ -192,12 +192,13 @@ export default function Estoque() {
   const [parcelasVenda,         setParcelasVenda]         = useState<number>(2)
   const [salvandoVendaVendedor, setSalvandoVendaVendedor] = useState(false)
 
-  function calcGrossFromBase(base: number, desconto: number, forma: FormaPagamento, parcelas: number) {
+  function calcGrossFromBase(base: number, desconto: number, forma: FormaPagamento, parcelas: number, entrada = 0) {
     const baseEfetiva = Math.max(0, base - desconto)
     if (forma === 'parcelado' || forma === 'misto') {
       const jP2 = juros.find(j => j.parcelas === parcelas)
       // usa taxa_comercial (markup cobrado do cliente) — igual ao que a tabela de parcelas exibe
       const markup = jP2 ? jP2.taxa_comercial : 0
+      if (forma === 'misto') return calcParceladoComEntrada(base, desconto, entrada, markup)
       if (markup > 0) return parseFloat((baseEfetiva * (1 + markup / 100)).toFixed(2))
     }
     return baseEfetiva
@@ -2370,7 +2371,7 @@ export default function Estoque() {
                         const bn = parseFloat(valorBaseVendedor)
                         const dn = parseBRL(descontoVendedor)
                         if (!isNaN(bn) && bn > 0) {
-                          const g = calcGrossFromBase(bn, dn, formaPagamento, j.parcelas)
+                          const g = calcGrossFromBase(bn, dn, formaPagamento, j.parcelas, parseBRL(valorEntradaVendedor))
                           setValorVendaVendedor(String(g))
                         }
                       }}
@@ -2483,8 +2484,8 @@ export default function Estoque() {
           <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-3"
             style={{ backgroundColor: '#000000cc' }}
             onClick={resetModalVenda}>
-            <div className="rounded-2xl border w-full max-w-sm flex flex-col"
-              style={{ backgroundColor: '#111', borderColor: '#4ade8033', maxHeight: '90vh' }}
+            <div className="rounded-2xl border w-full max-w-sm flex flex-col overflow-hidden max-h-[calc(100dvh-1.5rem)]"
+              style={{ backgroundColor: '#111', borderColor: '#4ade8033' }}
               onClick={e => e.stopPropagation()}>
 
               {/* Header fixo */}
@@ -2514,7 +2515,7 @@ export default function Estoque() {
                       <button key={ref.label}
                         onClick={() => {
                           const descontoNum = parseBRL(descontoVendedor)
-                          const gross = calcGrossFromBase(ref.val, descontoNum, formaPagamento, parcelasVenda)
+                          const gross = calcGrossFromBase(ref.val, descontoNum, formaPagamento, parcelasVenda, parseBRL(valorEntradaVendedor))
                           setValorBaseVendedor(String(ref.val))
                           setValorVendaVendedor(String(gross))
                         }}
@@ -2535,7 +2536,7 @@ export default function Estoque() {
                             const baseNum = parseFloat(valorBaseVendedor)
                             const desc = parseBRL(e.target.value)
                             if (!isNaN(baseNum) && baseNum > 0) {
-                              setValorVendaVendedor(String(calcGrossFromBase(baseNum, desc, formaPagamento, parcelasVenda)))
+                              setValorVendaVendedor(String(calcGrossFromBase(baseNum, desc, formaPagamento, parcelasVenda, parseBRL(valorEntradaVendedor))))
                             }
                           }}
                           placeholder="0"
@@ -2549,7 +2550,7 @@ export default function Estoque() {
               </div>
 
               {/* Corpo scrollável */}
-              <div className="px-4 py-3 flex flex-col gap-3 overflow-y-auto flex-1">
+              <div className="px-4 py-3 pb-5 flex flex-col gap-3 overflow-y-auto flex-1 min-h-0">
 
                 {/* Forma de pagamento — tabs compactas */}
                 <div className="flex gap-1.5 flex-wrap">
@@ -2562,7 +2563,7 @@ export default function Estoque() {
                           const baseNum = parseFloat(valorBaseVendedor)
                           const descontoNum = parseBRL(descontoVendedor)
                           if (!isNaN(baseNum) && baseNum > 0) {
-                            setValorVendaVendedor(String(calcGrossFromBase(baseNum, descontoNum, op.key, parcelasVenda)))
+                            setValorVendaVendedor(String(calcGrossFromBase(baseNum, descontoNum, op.key, parcelasVenda, parseBRL(valorEntradaVendedor))))
                           }
                         }}
                         className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-semibold transition-all"
@@ -2606,7 +2607,14 @@ export default function Estoque() {
                     {CampoValor({
                       label: 'Entrada à vista',
                       value: valorEntradaVendedor,
-                      onChange: setValorEntradaVendedor,
+                      onChange: (v: string) => {
+                        setValorEntradaVendedor(v)
+                        const baseNum = parseFloat(valorBaseVendedor)
+                        const descontoNum = parseBRL(descontoVendedor)
+                        if (!isNaN(baseNum) && baseNum > 0) {
+                          setValorVendaVendedor(String(calcGrossFromBase(baseNum, descontoNum, 'misto', parcelasVenda, parseBRL(v))))
+                        }
+                      },
                     })}
                     {CampoValor({
                       label: 'Parcelado na maquininha (c/ juros)',
