@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation'
 import { dataHoje, fmt, parseBRL, diasNoEstoque } from '../../lib/utils'
 import { type Juros, TAXA_REAL_FALLBACK } from '../../lib/financeiro'
 import { getTaxasAtivas } from '../../lib/taxas'
+import { calcularValorAposTributos, getTaxaTributariaEstimada, TAXA_TRIBUTARIA_ESTIMADA_PADRAO } from '../../lib/tributos'
 import { useToast, ToastContainer } from '../../components/ui/Toast'
 import { SpinnerPage } from '../../components/ui/Spinner'
 
@@ -152,6 +153,7 @@ export default function Estoque() {
   const [erroLoad, setErroLoad] = useState<string | null>(null)
   const [produtos, setProdutos] = useState<Produto[]>([])
   const [juros, setJuros] = useState<Juros[]>([])
+  const [taxaTributariaEstimada, setTaxaTributariaEstimada] = useState(TAXA_TRIBUTARIA_ESTIMADA_PADRAO)
   const [vendedores, setVendedores] = useState<Vendedor[]>([])
 
   // Filtros
@@ -350,26 +352,30 @@ export default function Estoque() {
       }
 
       if (profile.cargo === 'gestor') {
-        const [prodRes, taxasRes, vendRes, notifRes] = await Promise.all([
+        const [prodRes, taxasRes, taxaTributaria, vendRes, notifRes] = await Promise.all([
           produtosQuery,
           getTaxasAtivas(supabase, profile.store_id),
+          getTaxaTributariaEstimada(supabase, profile.store_id),
           supabase.from('profiles').select('id, nome').eq('store_id', profile.store_id).eq('cargo', 'vendedor'),
           supabase.from('notifications').select('*').eq('store_id', profile.store_id).order('created_at', { ascending: false }).limit(50),
         ])
         if (cancelado) return
         if (prodRes.data)  setProdutos(prodRes.data as Produto[])
         if (taxasRes)      setJuros(taxasRes)
+        setTaxaTributariaEstimada(taxaTributaria)
         if (vendRes.data)  setVendedores(vendRes.data)
         if (notifRes.data) setNotificacoes(notifRes.data as Notificacao[])
       } else {
-        const [prodRes, taxasRes, notifRes] = await Promise.all([
+        const [prodRes, taxasRes, taxaTributaria, notifRes] = await Promise.all([
           produtosQuery,
           getTaxasAtivas(supabase, profile.store_id),
+          getTaxaTributariaEstimada(supabase, profile.store_id),
           supabase.from('notifications').select('*').eq('store_id', profile.store_id).order('created_at', { ascending: false }).limit(50),
         ])
         if (cancelado) return
         if (prodRes.data)   setProdutos(prodRes.data as Produto[])
         if (taxasRes)       setJuros(taxasRes)
+        setTaxaTributariaEstimada(taxaTributaria)
         if (notifRes.data)  setNotificacoes(notifRes.data as Notificacao[])
       }
 
@@ -1605,22 +1611,26 @@ export default function Estoque() {
                   {produto.valor > 0 && (() => {
                     const custo = attr.custo_total ?? 0
                     const temCusto = cargo === 'gestor' && custo > 0
-                    function lucroSemNF(v: number) { return v - custo }
-                    function lucroComNF(v: number)  { return v *.92 - custo }
-                    function corLucro(v: number)    { return v >= 0 ? '#4ade80' : '#f87171' }
+                    function margemBruta(v: number) { return v - custo }
+                    function margemLiquidaEstimada(v: number) {
+                      return calcularValorAposTributos(v, taxaTributariaEstimada) - custo
+                    }
+                    function corMargem(v: number) { return v >= 0 ? '#4ade80' : '#f87171' }
 
-                    function LucroBloco({ valor }: { valor: number }) {
+                    function MargemBloco({ valor }: { valor: number }) {
                       if (!temCusto) return null
-                      const lsNF = lucroSemNF(valor)
-                      const lcNF = lucroComNF(valor)
+                      const bruta = margemBruta(valor)
+                      const liquidaEstimada = margemLiquidaEstimada(valor)
                       return (
-                        <div className="flex gap-3 mt-1.5 justify-end">
-                          <span className="text-xs" style={{ color: '#444' }}>
-                            s/NF: <span style={{ color: corLucro(lsNF) }}>R$ {fmt(lsNF)}</span>
-                          </span>
-                          <span className="text-xs" style={{ color: '#444' }}>
-                            c/NF: <span style={{ color: lcNF >= 0 ? '#fb923c' : '#f87171' }}>R$ {fmt(lcNF)}</span>
-                          </span>
+                        <div className="grid grid-cols-2 gap-2 mt-2">
+                          <div className="rounded-lg px-3 py-2" style={{ backgroundColor: '#0d0d0d' }}>
+                            <p className="text-xs" style={{ color: '#777' }}>Margem bruta</p>
+                            <p className="text-sm font-bold mt-0.5" style={{ color: corMargem(bruta) }}>R$ {fmt(bruta)}</p>
+                          </div>
+                          <div className="rounded-lg px-3 py-2" style={{ backgroundColor: '#0d0d0d' }}>
+                            <p className="text-xs" style={{ color: '#777' }}>Líquida estimada ({taxaTributariaEstimada}%)</p>
+                            <p className="text-sm font-bold mt-0.5" style={{ color: corMargem(liquidaEstimada) }}>R$ {fmt(liquidaEstimada)}</p>
+                          </div>
                         </div>
                       )
                     }
@@ -1691,7 +1701,7 @@ export default function Estoque() {
                             <span className="text-xs font-medium uppercase tracking-wide" style={{ color: '#555' }}>Valor de venda</span>
                             <InlineInput produtoId={produto.id} campo="valor" valorAtual={valorLive} cor="white" tamanho="xl" />
                           </div>
-                          <LucroBloco valor={valorLive} />
+                          <MargemBloco valor={valorLive} />
                         </div>
 
                         {/* Máx. desconto à vista */}
@@ -1716,7 +1726,7 @@ export default function Estoque() {
                               {cargo === 'gestor' && economiaAvista > 0 && (
                                 <p className="text-xs text-right mt-0.5" style={{ color: '#555' }}>-{pctAvista}% do valor normal</p>
                               )}
-                              <LucroBloco valor={avistaLive} />
+                              <MargemBloco valor={avistaLive} />
                             </div>
                           )
                         })()}
@@ -1757,7 +1767,7 @@ export default function Estoque() {
                                   </span>
                                 </div>
                               )}
-                              <LucroBloco valor={promocaoLive} />
+                              <MargemBloco valor={promocaoLive} />
                             </div>
                           )
                         })()}
@@ -1786,8 +1796,8 @@ export default function Estoque() {
                           const taxa        = jurosPsj?.taxa_operadora ?? FALLBACK[psjParcelas] ?? 14
                           const recebido    = psjValorLive * (1 - taxa / 100)
                           const custo       = attr.custo_total ?? 0
-                          const lsNF        = recebido - custo
-                          const lcNF        = recebido * 0.92 - custo
+                          const margemAposTaxa = recebido - custo
+                          const margemLiquidaEstimada = calcularValorAposTributos(recebido, taxaTributariaEstimada) - custo
                           const corL        = (v: number) => v >= 0 ? '#4ade80' : '#f87171'
                           const economiaV   = valorLive - psjValorLive
                           const pctV        = economiaV > 0 ? Math.round((economiaV / valorLive) * 100) : 0
@@ -1836,13 +1846,15 @@ export default function Estoque() {
 
                               {/* Lucros (gestor) */}
                               {temCusto && (
-                                <div className="flex gap-3 justify-end mt-2 pt-2 border-t" style={{ borderColor: '#4ade8022' }}>
-                                  <span className="text-xs" style={{ color: '#444' }}>
-                                    s/NF: <span style={{ color: corL(lsNF) }}>R$ {fmt(lsNF)}</span>
-                                  </span>
-                                  <span className="text-xs" style={{ color: '#444' }}>
-                                    c/NF: <span style={{ color: lcNF >= 0 ? '#fb923c' : '#f87171' }}>R$ {fmt(lcNF)}</span>
-                                  </span>
+                                <div className="grid grid-cols-2 gap-2 mt-2 pt-2 border-t" style={{ borderColor: '#4ade8022' }}>
+                                  <div className="rounded-lg px-3 py-2" style={{ backgroundColor: '#0d0d0d' }}>
+                                    <p className="text-xs" style={{ color: '#777' }}>Após taxa da maquininha</p>
+                                    <p className="text-sm font-bold mt-0.5" style={{ color: corL(margemAposTaxa) }}>R$ {fmt(margemAposTaxa)}</p>
+                                  </div>
+                                  <div className="rounded-lg px-3 py-2" style={{ backgroundColor: '#0d0d0d' }}>
+                                    <p className="text-xs" style={{ color: '#777' }}>Líquida estimada ({taxaTributariaEstimada}%)</p>
+                                    <p className="text-sm font-bold mt-0.5" style={{ color: corL(margemLiquidaEstimada) }}>R$ {fmt(margemLiquidaEstimada)}</p>
+                                  </div>
                                 </div>
                               )}
                             </div>
@@ -1983,16 +1995,18 @@ export default function Estoque() {
                         )}
                         {produto.valor_venda && produto.valor_venda > 0 && (produto.atributos?.custo_total ?? 0) > 0 && (() => {
                           const custo = produto.atributos!.custo_total!
-                          const lsNF = produto.valor_venda - custo
-                          const lcNF = produto.valor_venda *.92 - custo
+                          const margemBruta = produto.valor_venda - custo
+                          const margemLiquidaEstimada = calcularValorAposTributos(produto.valor_venda, taxaTributariaEstimada) - custo
                           return (
-                            <div className="flex gap-3 justify-end pt-1.5 border-t" style={{ borderColor: '#4ade8015' }}>
-                              <span className="text-xs" style={{ color: '#444' }}>
-                                s/NF: <span style={{ color: lsNF >= 0 ? '#4ade80' : '#f87171' }}>R$ {fmt(lsNF)}</span>
-                              </span>
-                              <span className="text-xs" style={{ color: '#444' }}>
-                                c/NF: <span style={{ color: lcNF >= 0 ? '#fb923c' : '#f87171' }}>R$ {fmt(lcNF)}</span>
-                              </span>
+                            <div className="grid grid-cols-2 gap-2 pt-2 border-t" style={{ borderColor: '#4ade8015' }}>
+                              <div className="rounded-lg px-3 py-2" style={{ backgroundColor: '#0d0d0d' }}>
+                                <p className="text-xs" style={{ color: '#777' }}>Margem bruta</p>
+                                <p className="text-sm font-bold mt-0.5" style={{ color: margemBruta >= 0 ? '#4ade80' : '#f87171' }}>R$ {fmt(margemBruta)}</p>
+                              </div>
+                              <div className="rounded-lg px-3 py-2" style={{ backgroundColor: '#0d0d0d' }}>
+                                <p className="text-xs" style={{ color: '#777' }}>Líquida estimada ({taxaTributariaEstimada}%)</p>
+                                <p className="text-sm font-bold mt-0.5" style={{ color: margemLiquidaEstimada >= 0 ? '#fb923c' : '#f87171' }}>R$ {fmt(margemLiquidaEstimada)}</p>
+                              </div>
                             </div>
                           )
                         })()}
@@ -3147,7 +3161,7 @@ export default function Estoque() {
                   style={{ backgroundColor: '#1a1a1a', borderColor: '#2a2a2a' }} />
                 {editValor && modalPrecos.atributos?.custo_total ? (
                   <p className="text-xs mt-1" style={{ color: '#4ade80' }}>
-                    Lucro s/ NF: R$ {fmt(parseFloat(editValor) - (modalPrecos.atributos.custo_total ?? 0))}
+                    Margem bruta: R$ {fmt(parseFloat(editValor) - (modalPrecos.atributos.custo_total ?? 0))}
                   </p>
                 ) : null}
               </div>

@@ -7,6 +7,7 @@ import { MODELOS_IPHONE, GB_IPHONE, CORES_IPHONE } from '../../../lib/iphone-dat
 import { dataHoje, diasNoEstoque, descontoMaximoAvista, precoMinimoAvista } from '../../../lib/utils'
 import { type Juros, TAXA_REAL_FALLBACK, calcParcelado } from '../../../lib/financeiro'
 import { getTaxasAtivas } from '../../../lib/taxas'
+import { calcularValorAposTributos, getTaxaTributariaEstimada, TAXA_TRIBUTARIA_ESTIMADA_PADRAO } from '../../../lib/tributos'
 import { SpinnerPage } from '../../../components/ui/Spinner'
 import SeletorPilulas from '../../../components/ui/SeletorPilulas'
 
@@ -26,6 +27,7 @@ export default function ProdutoForm({ produtoId }: Props) {
   const [salvando, setSalvando] = useState(false)
   const [sucesso, setSucesso] = useState(false)
   const [juros, setJuros] = useState<Juros[]>([])
+  const [taxaTributariaEstimada, setTaxaTributariaEstimada] = useState(TAXA_TRIBUTARIA_ESTIMADA_PADRAO)
 
   const [modelo, setModelo] = useState('')
   const [tipo, setTipo] = useState('')
@@ -56,18 +58,18 @@ export default function ProdutoForm({ produtoId }: Props) {
   const coresDisponiveis = gb ? (CORES_IPHONE[modelo] || []) : []
   const camposVisiveis = ehSeminovo ? (cor && condicao) : cor
 
-  function calcLucro(preco: number) {
+  function calcMargemBruta(preco: number) {
     if (!custoTotal || !preco) return null
     return preco - custoTotal
   }
 
-  function calcLucroComNF(preco: number) {
+  function calcMargemLiquidaEstimada(preco: number) {
     if (!custoTotal || !preco) return null
-    return (preco * 0.92) - custoTotal
+    return calcularValorAposTributos(preco, taxaTributariaEstimada) - custoTotal
   }
 
-  function formatarLucro(lucro: number | null) {
-    return lucro?.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) ?? '—'
+  function formatarMargem(margem: number | null) {
+    return margem?.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) ?? '—'
   }
 
   function calcRecebidoLiquido(valorParcelado: number, taxaReal: number | null, parcelas?: number) {
@@ -143,8 +145,12 @@ export default function ProdutoForm({ produtoId }: Props) {
         }
       }
 
-      const taxasAtivas = await getTaxasAtivas(supabase, profile.store_id)
+      const [taxasAtivas, taxaTributaria] = await Promise.all([
+        getTaxasAtivas(supabase, profile.store_id),
+        getTaxaTributariaEstimada(supabase, profile.store_id),
+      ])
       if (taxasAtivas) setJuros(taxasAtivas)
+      setTaxaTributariaEstimada(taxaTributaria)
 
       setCarregando(false)
     }
@@ -499,13 +505,13 @@ export default function ProdutoForm({ produtoId }: Props) {
               <div className="rounded-xl p-4 mb-5 flex items-center justify-between"
                 style={{ backgroundColor: '#1a1a1a', border: '1px solid #2a2a2a' }}>
                 <div>
-                  <p className="text-sm text-white font-medium">Preço mínimo com Nota Fiscal</p>
+                  <p className="text-sm text-white font-medium">Preço mínimo estimado</p>
                   <p className="text-xs mt-0.5" style={{ color: '#888' }}>
-                    Para não perder dinheiro vendendo com NF (custo ÷ 0,92)
+                    Considera a taxa tributária estimada de {taxaTributariaEstimada}%
                   </p>
                 </div>
                 <p className="text-xl font-bold" style={{ color: '#f87171' }}>
-                  R$ {(custoTotal / 0.92).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                  R$ {(custoTotal / (1 - taxaTributariaEstimada / 100)).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                 </p>
               </div>
             )}
@@ -520,10 +526,10 @@ export default function ProdutoForm({ produtoId }: Props) {
                 {valor && custoTotal > 0 && (
                   <div className="mt-1.5 flex flex-col gap-0.5">
                     <p className="text-xs" style={{ color: '#4ade80' }}>
-                      Lucro s/ NF: R$ {formatarLucro(calcLucro(parseFloat(valor)))}
+                      Margem bruta: R$ {formatarMargem(calcMargemBruta(parseFloat(valor)))}
                     </p>
                     <p className="text-xs" style={{ color: '#fb923c' }}>
-                      Lucro c/ NF: R$ {formatarLucro(calcLucroComNF(parseFloat(valor)))}
+                      Margem líquida estimada: R$ {formatarMargem(calcMargemLiquidaEstimada(parseFloat(valor)))}
                     </p>
                   </div>
                 )}
@@ -541,7 +547,7 @@ export default function ProdutoForm({ produtoId }: Props) {
                       Preço mínimo: R$ {precoMinimoAvista(parseFloat(valor) || 0, parseFloat(valorMinimo) || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                     </p>
                     <p className="text-xs" style={{ color: '#fb923c' }}>
-                      Lucro c/ NF no mínimo: R$ {formatarLucro(calcLucroComNF(precoMinimoAvista(parseFloat(valor) || 0, parseFloat(valorMinimo) || 0)))}
+                      Margem líquida estimada: R$ {formatarMargem(calcMargemLiquidaEstimada(precoMinimoAvista(parseFloat(valor) || 0, parseFloat(valorMinimo) || 0)))}
                     </p>
                   </div>
                 )}
@@ -556,10 +562,10 @@ export default function ProdutoForm({ produtoId }: Props) {
                 {valorPromocional && custoTotal > 0 && (
                   <div className="mt-1.5 flex flex-col gap-0.5">
                     <p className="text-xs" style={{ color: '#4ade80' }}>
-                      Lucro s/ NF: R$ {formatarLucro(calcLucro(parseFloat(valorPromocional)))}
+                      Margem bruta: R$ {formatarMargem(calcMargemBruta(parseFloat(valorPromocional)))}
                     </p>
                     <p className="text-xs" style={{ color: '#fb923c' }}>
-                      Lucro c/ NF: R$ {formatarLucro(calcLucroComNF(parseFloat(valorPromocional)))}
+                      Margem líquida estimada: R$ {formatarMargem(calcMargemLiquidaEstimada(parseFloat(valorPromocional)))}
                     </p>
                   </div>
                 )}
@@ -626,23 +632,23 @@ export default function ProdutoForm({ produtoId }: Props) {
                         const taxaReal = jurosDaParcela?.taxa_operadora ?? null
                         const taxa = taxaReal ?? (TAXA_REAL_FALLBACK[parcelasSemJuros] ?? 14)
                         const recebido = parseFloat(valorSemJuros) * (1 - taxa / 100)
-                        const lucroSemNF = recebido - custoTotal
-                        const lucroComNF = recebido * 0.92 - custoTotal
+                        const margemAposTaxa = recebido - custoTotal
+                        const margemLiquidaEstimada = calcularValorAposTributos(recebido, taxaTributariaEstimada) - custoTotal
                         return (
                           <div className="rounded-xl p-4" style={{ backgroundColor: '#1a1a1a' }}>
-                            <p className="text-sm mb-3" style={{ color: '#888' }}>Lucro líquido (empresa absorve a taxa)</p>
+                            <p className="text-sm mb-3" style={{ color: '#888' }}>Margens estimadas (empresa absorve a taxa)</p>
                             <div className="flex items-center justify-between">
-                              <span className="text-xs" style={{ color: '#555' }}>s/ NF</span>
+                              <span className="text-xs" style={{ color: '#555' }}>Após taxa da maquininha</span>
                               <span className="text-lg font-bold"
-                                style={{ color: lucroSemNF < 0 ? '#f87171' : '#4ade80' }}>
-                                R$ {lucroSemNF.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                                style={{ color: margemAposTaxa < 0 ? '#f87171' : '#4ade80' }}>
+                                R$ {margemAposTaxa.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                               </span>
                             </div>
                             <div className="flex items-center justify-between mt-1.5">
-                              <span className="text-xs" style={{ color: '#555' }}>c/ NF</span>
+                              <span className="text-xs" style={{ color: '#555' }}>Após taxa e tributos ({taxaTributariaEstimada}%)</span>
                               <span className="text-sm font-bold"
-                                style={{ color: lucroComNF < 0 ? '#f87171' : '#fb923c' }}>
-                                R$ {lucroComNF.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                                style={{ color: margemLiquidaEstimada < 0 ? '#f87171' : '#fb923c' }}>
+                                R$ {margemLiquidaEstimada.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                               </span>
                             </div>
                           </div>
