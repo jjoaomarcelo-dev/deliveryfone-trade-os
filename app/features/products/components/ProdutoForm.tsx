@@ -4,7 +4,7 @@ import { useEffect, useState, useMemo } from 'react'
 import { createClient } from '../../../lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import { MODELOS_IPHONE, GB_IPHONE, CORES_IPHONE } from '../../../lib/iphone-data'
-import { dataHoje, diasNoEstoque, descontoMaximoAvista, precoMinimoAvista } from '../../../lib/utils'
+import { dataHoje, diasNoEstoque, descontoMaximoAvista, fmt, precoMinimoAvista } from '../../../lib/utils'
 import { type Juros, TAXA_REAL_FALLBACK, calcParcelado } from '../../../lib/financeiro'
 import { getTaxasAtivas } from '../../../lib/taxas'
 import { calcularValorAposTributos, getTaxaTributariaEstimada, TAXA_TRIBUTARIA_ESTIMADA_PADRAO } from '../../../lib/tributos'
@@ -69,7 +69,16 @@ export default function ProdutoForm({ produtoId }: Props) {
   }
 
   function formatarMargem(margem: number | null) {
-    return margem?.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) ?? '—'
+    return margem === null ? '—' : fmt(margem)
+  }
+
+  function atualizarCusto(valorDigitado: string, atualizar: (valor: string) => void) {
+    const numero = Number(valorDigitado)
+    atualizar(Number.isFinite(numero) && numero < 0 ? '0' : valorDigitado)
+  }
+
+  function formatarPercentual(percentual: number) {
+    return percentual.toLocaleString('pt-BR', { maximumFractionDigits: 2 })
   }
 
   function calcRecebidoLiquido(valorParcelado: number, taxaReal: number | null, parcelas?: number) {
@@ -161,9 +170,14 @@ export default function ProdutoForm({ produtoId }: Props) {
     if (!modelo) { alert('Selecione o modelo'); return }
     if (!tipo) { alert('Selecione Novo ou Seminovo'); return }
     if (!gb) { alert('Selecione o armazenamento'); return }
+    if (!gbsDisponiveis.includes(gb)) { alert('Selecione um armazenamento válido para este modelo'); return }
     if (!cor) { alert('Selecione a cor'); return }
     if (ehSeminovo && !condicao) { alert('Selecione a condição'); return }
     if (status === 'disponivel' && !valor) { alert('Informe o valor de venda'); return }
+    if ((parseFloat(custoEntrada) || 0) < 0 || (parseFloat(custoManutencao) || 0) < 0) {
+      alert('Os custos não podem ser negativos')
+      return
+    }
     setSalvando(true)
 
     const atributos: Record<string, unknown> = {
@@ -465,7 +479,8 @@ export default function ProdutoForm({ produtoId }: Props) {
 
               <div>
                 <label className="text-sm mb-1 block" style={{ color: '#aaa' }}>Custo de Entrada (R$)</label>
-                <input type="number" value={custoEntrada} onChange={e => setCustoEntrada(e.target.value)}
+                <input type="number" min="0" step="0.01" value={custoEntrada}
+                  onChange={e => atualizarCusto(e.target.value, setCustoEntrada)}
                   className="w-full rounded-xl px-4 py-3 text-white border outline-none"
                   style={{ backgroundColor: '#1a1a1a', borderColor: '#2a2a2a' }}
                   placeholder="0,00" />
@@ -473,7 +488,8 @@ export default function ProdutoForm({ produtoId }: Props) {
 
               <div>
                 <label className="text-sm mb-1 block" style={{ color: '#aaa' }}>Custo Manutenção (R$)</label>
-                <input type="number" value={custoManutencao} onChange={e => setCustoManutencao(e.target.value)}
+                <input type="number" min="0" step="0.01" value={custoManutencao}
+                  onChange={e => atualizarCusto(e.target.value, setCustoManutencao)}
                   className="w-full rounded-xl px-4 py-3 text-white border outline-none"
                   style={{ backgroundColor: '#1a1a1a', borderColor: '#2a2a2a' }}
                   placeholder="0,00" />
@@ -484,7 +500,7 @@ export default function ProdutoForm({ produtoId }: Props) {
                   style={{ backgroundColor: '#1a1a1a' }}>
                   <p className="text-sm" style={{ color: '#888' }}>Custo Total</p>
                   <p className="text-2xl font-bold" style={{ color: '#c8960c' }}>
-                    R$ {custoTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                    R$ {fmt(custoTotal)}
                   </p>
                 </div>
               )}
@@ -511,7 +527,7 @@ export default function ProdutoForm({ produtoId }: Props) {
                   </p>
                 </div>
                 <p className="text-xl font-bold" style={{ color: '#f87171' }}>
-                  R$ {(custoTotal / (1 - taxaTributariaEstimada / 100)).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                  R$ {fmt(custoTotal / (1 - taxaTributariaEstimada / 100))}
                 </p>
               </div>
             )}
@@ -544,7 +560,7 @@ export default function ProdutoForm({ produtoId }: Props) {
                 {valorMinimo && custoTotal > 0 && (
                   <div className="mt-1.5 flex flex-col gap-0.5">
                     <p className="text-xs" style={{ color: '#4ade80' }}>
-                      Preço mínimo: R$ {precoMinimoAvista(parseFloat(valor) || 0, parseFloat(valorMinimo) || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                      Preço mínimo: R$ {fmt(precoMinimoAvista(parseFloat(valor) || 0, parseFloat(valorMinimo) || 0))}
                     </p>
                     <p className="text-xs" style={{ color: '#fb923c' }}>
                       Margem líquida estimada: R$ {formatarMargem(calcMargemLiquidaEstimada(precoMinimoAvista(parseFloat(valor) || 0, parseFloat(valorMinimo) || 0)))}
@@ -619,7 +635,7 @@ export default function ProdutoForm({ produtoId }: Props) {
                         <div>
                           <p className="text-xs mb-1" style={{ color: '#666' }}>Como vai aparecer para o vendedor</p>
                           <p className="text-lg font-bold text-white">
-                            {parcelasSemJuros}x de R$ {(parseFloat(valorSemJuros) / parcelasSemJuros).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                            {parcelasSemJuros}x de R$ {fmt(parseFloat(valorSemJuros) / parcelasSemJuros)}
                           </p>
                         </div>
                         <span className="text-xs font-bold px-3 py-1.5 rounded-lg"
@@ -641,14 +657,14 @@ export default function ProdutoForm({ produtoId }: Props) {
                               <span className="text-xs" style={{ color: '#555' }}>Após taxa da maquininha</span>
                               <span className="text-lg font-bold"
                                 style={{ color: margemAposTaxa < 0 ? '#f87171' : '#4ade80' }}>
-                                R$ {margemAposTaxa.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                                R$ {fmt(margemAposTaxa)}
                               </span>
                             </div>
                             <div className="flex items-center justify-between mt-1.5">
                               <span className="text-xs" style={{ color: '#555' }}>Após taxa e tributos ({taxaTributariaEstimada}%)</span>
                               <span className="text-sm font-bold"
                                 style={{ color: margemLiquidaEstimada < 0 ? '#f87171' : '#fb923c' }}>
-                                R$ {margemLiquidaEstimada.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                                R$ {fmt(margemLiquidaEstimada)}
                               </span>
                             </div>
                           </div>
@@ -683,16 +699,16 @@ export default function ProdutoForm({ produtoId }: Props) {
                         return (
                           <tr key={j.parcelas} style={{ backgroundColor: i % 2 === 0 ? '#111' : '#141414' }}>
                             <td className="px-4 py-2.5 font-medium text-white">{j.parcelas}x</td>
-                            <td className="px-4 py-2.5" style={{ color: '#888' }}>{j.taxa_comercial}%</td>
+                            <td className="px-4 py-2.5" style={{ color: '#888' }}>{formatarPercentual(j.taxa_comercial)}%</td>
                             <td className="px-4 py-2.5 font-semibold" style={{ color: '#c8960c' }}>
-                              R$ {parcela.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                              R$ {fmt(parcela)}
                             </td>
                             <td className="px-4 py-2.5" style={{ color: '#666' }}>
-                              R$ {total.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                              R$ {fmt(total)}
                             </td>
                             <td className="px-4 py-2.5 font-semibold"
                               style={{ color: lucroLiquido !== null && lucroLiquido < 0 ? '#f87171' : '#4ade80' }}>
-                              {lucroLiquido !== null ? `R$ ${lucroLiquido.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}` : '—'}
+                              {lucroLiquido !== null ? `R$ ${fmt(lucroLiquido)}` : '—'}
                             </td>
                           </tr>
                         )

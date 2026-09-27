@@ -132,6 +132,16 @@ describe('catálogo vem do iphone-data', () => {
   test('capacidadesDe espelha GB_IPHONE', () => {
     expect(capacidadesDe('iPhone 13')).toEqual(GB_IPHONE['iPhone 13'])
   })
+  test('iPhone 17 não oferece capacidade de 128GB', () => {
+    expect(capacidadesDe('iPhone 17')).toEqual(['256GB', '512GB'])
+  })
+  test('iPhone 17 Pro Max oferece capacidade de 2TB', () => {
+    expect(capacidadesDe('iPhone 17 Pro Max')).toContain('2TB')
+  })
+  test('usa o nome oficial iPhone Air', () => {
+    expect(modelos).toContain('iPhone Air')
+    expect(modelos).not.toContain('iPhone 17 Air')
+  })
   test('coresDe espelha CORES_IPHONE (em inglês)', () => {
     expect(coresDe('iPhone 15 Pro')).toEqual(CORES_IPHONE['iPhone 15 Pro'])
   })

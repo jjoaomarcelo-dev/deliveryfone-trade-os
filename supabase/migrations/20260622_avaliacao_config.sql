@@ -99,7 +99,7 @@ CROSS JOIN (VALUES
   ('iPhone 16 Pro Max', 4700, 22, 15, 15, 13, 15, 12, 8),
   ('iPhone 16e',        2500, 28, 15, 15, 13, 15, 12, 8),
   ('iPhone 17',         3300, 22, 15, 15, 13, 15, 12, 8),
-  ('iPhone 17 Air',     3500, 22, 15, 15, 13, 15, 12, 8),
+  ('iPhone Air',        3500, 22, 15, 15, 13, 15, 12, 8),
   ('iPhone 17 Pro',     4300, 22, 15, 15, 13, 15, 12, 8),
   ('iPhone 17 Pro Max', 4700, 22, 15, 15, 13, 15, 12, 8)
 ) AS m(modelo, valor_base, dep, tela, tampa, bateria, cam_t, cam_f, carcaca)

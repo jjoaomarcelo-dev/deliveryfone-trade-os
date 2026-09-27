@@ -5,7 +5,7 @@ export const MODELOS_IPHONE = [
   'iPhone 14', 'iPhone 14 Plus', 'iPhone 14 Pro', 'iPhone 14 Pro Max',
   'iPhone 15', 'iPhone 15 Plus', 'iPhone 15 Pro', 'iPhone 15 Pro Max',
   'iPhone 16', 'iPhone 16 Plus', 'iPhone 16 Pro', 'iPhone 16 Pro Max', 'iPhone 16e',
-  'iPhone 17', 'iPhone 17 Air', 'iPhone 17 Pro', 'iPhone 17 Pro Max',
+  'iPhone 17', 'iPhone Air', 'iPhone 17 Pro', 'iPhone 17 Pro Max',
 ]
 
 export const GB_IPHONE: Record<string, string[]> = {
@@ -33,10 +33,10 @@ export const GB_IPHONE: Record<string, string[]> = {
   'iPhone 16 Pro': ['128GB', '256GB', '512GB', '1TB'],
   'iPhone 16 Pro Max': ['256GB', '512GB', '1TB'],
   'iPhone 16e': ['128GB', '256GB'],
-  'iPhone 17': ['128GB', '256GB', '512GB'],
-  'iPhone 17 Air': ['128GB', '256GB', '512GB'],
+  'iPhone 17': ['256GB', '512GB'],
+  'iPhone Air': ['256GB', '512GB', '1TB'],
   'iPhone 17 Pro': ['256GB', '512GB', '1TB'],
-  'iPhone 17 Pro Max': ['256GB', '512GB', '1TB'],
+  'iPhone 17 Pro Max': ['256GB', '512GB', '1TB', '2TB'],
 }
 
 export const CORES_IPHONE: Record<string, string[]> = {
@@ -65,7 +65,7 @@ export const CORES_IPHONE: Record<string, string[]> = {
   'iPhone 16 Pro Max': ['BLACK TITANIUM', 'WHITE TITANIUM', 'NATURAL TITANIUM', 'DESERT TITANIUM'],
   'iPhone 16e': ['BLACK', 'WHITE'],
   'iPhone 17': ['BLACK', 'WHITE', 'SAGE', 'MIST BLUE', 'LAVENDER'],
-  'iPhone 17 Air': ['SKY BLUE', 'LIGHT GOLD', 'CLOUD WHITE', 'SPACE BLACK'],
+  'iPhone Air': ['SKY BLUE', 'LIGHT GOLD', 'CLOUD WHITE', 'SPACE BLACK'],
   'iPhone 17 Pro': ['SILVER', 'COSMIC ORANGE', 'DEEP BLUE'],
   'iPhone 17 Pro Max': ['SILVER', 'COSMIC ORANGE', 'DEEP BLUE'],
 }

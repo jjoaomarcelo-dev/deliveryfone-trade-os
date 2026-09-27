@@ -67,10 +67,10 @@ JOIN (VALUES
   ('iPhone 16 Pro','128GB'),   ('iPhone 16 Pro','256GB'),   ('iPhone 16 Pro','512GB'),   ('iPhone 16 Pro','1TB'),
   ('iPhone 16 Pro Max','256GB'),('iPhone 16 Pro Max','512GB'),('iPhone 16 Pro Max','1TB'),
   ('iPhone 16e','128GB'),      ('iPhone 16e','256GB'),
-  ('iPhone 17','128GB'),       ('iPhone 17','256GB'),       ('iPhone 17','512GB'),
-  ('iPhone 17 Air','128GB'),   ('iPhone 17 Air','256GB'),   ('iPhone 17 Air','512GB'),
+  ('iPhone 17','256GB'),       ('iPhone 17','512GB'),
+  ('iPhone Air','256GB'),      ('iPhone Air','512GB'),      ('iPhone Air','1TB'),
   ('iPhone 17 Pro','256GB'),   ('iPhone 17 Pro','512GB'),   ('iPhone 17 Pro','1TB'),
-  ('iPhone 17 Pro Max','256GB'),('iPhone 17 Pro Max','512GB'),('iPhone 17 Pro Max','1TB')
+  ('iPhone 17 Pro Max','256GB'),('iPhone 17 Pro Max','512GB'),('iPhone 17 Pro Max','1TB'),('iPhone 17 Pro Max','2TB')
 ) AS c(modelo, capacidade) ON c.modelo = sm.modelo
 ON CONFLICT (store_id, modelo, capacidade) DO NOTHING;
 

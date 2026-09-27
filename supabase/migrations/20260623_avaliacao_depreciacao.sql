@@ -42,7 +42,7 @@ FROM (VALUES
   ('iPhone 16 Pro Max',  22),
   ('iPhone 16e',         28),
   ('iPhone 17',          22),
-  ('iPhone 17 Air',      22),
+  ('iPhone Air',         22),
   ('iPhone 17 Pro',      22),
   ('iPhone 17 Pro Max',  22)
 ) AS d(modelo, dep)
