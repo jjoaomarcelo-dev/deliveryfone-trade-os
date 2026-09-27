@@ -89,6 +89,25 @@ export default function Configuracoes() {
         </button>
 
         <button
+          onClick={() => router.push('/dashboard/configuracoes/tributos')}
+          className="w-full rounded-2xl border p-6 flex items-center gap-4 text-left transition-all"
+          style={{ backgroundColor: '#111', borderColor: '#1f1f1f' }}
+          onMouseEnter={e => e.currentTarget.style.borderColor = '#c8960c44'}
+          onMouseLeave={e => e.currentTarget.style.borderColor = '#1f1f1f'}>
+          <div className="w-14 h-14 rounded-2xl flex items-center justify-center text-2xl flex-shrink-0"
+            style={{ backgroundColor: '#1a1a1a' }}>
+            📊
+          </div>
+          <div>
+            <h2 className="font-bold text-white text-lg">Margem e Tributos</h2>
+            <p className="text-sm mt-0.5" style={{ color: '#666' }}>
+              Percentual estimado usado para apoiar a precificação
+            </p>
+          </div>
+          <div className="ml-auto text-xl" style={{ color: '#c8960c' }}>→</div>
+        </button>
+
+        <button
           onClick={() => router.push('/dashboard/configuracoes/avaliacao')}
           className="w-full rounded-2xl border p-6 flex items-center gap-4 text-left transition-all"
           style={{ backgroundColor: '#111', borderColor: '#1f1f1f' }}
