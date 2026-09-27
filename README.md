@@ -24,19 +24,15 @@ Os vídeos apresentam o sistema em uso nos dois perfis de acesso. A demonstraç�
 
 ### Visão do vendedor
 
-[![Assistir à demonstração do vendedor](docs/images/demo-vendedor.png)](https://raw.githubusercontent.com/jjoaomarcelo-dev/deliveryfone-trade-os/main/docs/videos/deliveryfone-vendedor.mp4)
+https://github.com/user-attachments/assets/63b61df3-e83e-4271-a6a9-280570992b0b
 
 Consulta do estoque, avaliação de aparelho usado, criação de diferentes simulações para clientes, reserva e registro de venda com formas de pagamento distintas.
 
-[Abrir vídeo do vendedor](https://raw.githubusercontent.com/jjoaomarcelo-dev/deliveryfone-trade-os/main/docs/videos/deliveryfone-vendedor.mp4)
-
 ### Visão do gestor
 
-[![Assistir à demonstração do gestor](docs/images/demo-gestor.png)](https://raw.githubusercontent.com/jjoaomarcelo-dev/deliveryfone-trade-os/main/docs/videos/deliveryfone-gestor.mp4)
+https://github.com/user-attachments/assets/b73eeff2-b501-4b63-adde-350d098750f4
 
 Cadastro e precificação de produtos, acompanhamento de margens estimadas, confirmação de vendas, indicadores e configuração das regras utilizadas pela equipe.
-
-[Abrir vídeo do gestor](https://raw.githubusercontent.com/jjoaomarcelo-dev/deliveryfone-trade-os/main/docs/videos/deliveryfone-gestor.mp4)
 
 > **Dados de demonstração:** usuários, IMEIs, produtos, preços, custos, taxas, juros e margens exibidos são fictícios. Os valores são configuráveis e os cenários têm finalidade exclusivamente demonstrativa, sem representar operações comerciais ou fiscais reais. A taxa tributária mostrada pelo sistema é apenas uma estimativa gerencial para apoiar a precificação; ela não substitui cálculo contábil ou orientação fiscal.
 
