@@ -39,6 +39,14 @@ describe('parseBRL', () => {
     expect(parseBRL('5000')).toBe(5000)
   })
 
+  test('aceita ponto como separador decimal', () => {
+    expect(parseBRL('4187.5')).toBe(4187.5)
+  })
+
+  test('aceita ponto com duas casas decimais', () => {
+    expect(parseBRL('4187.50')).toBe(4187.5)
+  })
+
   test('converte valor com símbolo de moeda', () => {
     expect(parseBRL('R$ 2.500,00')).toBe(2500)
   })

@@ -8,15 +8,34 @@ export function fmt(valor: number): string {
   return valor.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 }
 
-/** Converte string no formato BRL para número — ex: "2.500,00" → 2500 */
+/** Converte valores monetários em formato brasileiro ou decimal para número. */
 export function parseBRL(s: string): number {
-  return parseFloat(
-    s
-      .replace(/R\$\s?/g, '')
-      .replace(/\./g, '')
-      .replace(',', '.')
-      .trim()
-  ) || 0
+  const valor = s.replace(/R\$\s?/g, '').replace(/\s/g, '').trim()
+  if (!valor || !/[0-9]/.test(valor)) return 0
+
+  const ultimaVirgula = valor.lastIndexOf(',')
+  const ultimoPonto = valor.lastIndexOf('.')
+  let normalizado = valor
+
+  if (ultimaVirgula >= 0 && ultimoPonto >= 0) {
+    // Quando existem os dois separadores, o último representa os centavos.
+    normalizado = ultimaVirgula > ultimoPonto
+      ? valor.replace(/\./g, '').replace(',', '.')
+      : valor.replace(/,/g, '')
+  } else if (ultimaVirgula >= 0) {
+    normalizado = valor.replace(/\./g, '').replace(',', '.')
+  } else if (ultimoPonto >= 0) {
+    const quantidadePontos = (valor.match(/\./g) ?? []).length
+    const casasDepoisDoPonto = valor.length - ultimoPonto - 1
+
+    // Um único ponto com uma ou duas casas é decimal; nos demais casos,
+    // mantém a interpretação brasileira de separador de milhar.
+    normalizado = quantidadePontos === 1 && casasDepoisDoPonto <= 2
+      ? valor
+      : valor.replace(/\./g, '')
+  }
+
+  return Number.parseFloat(normalizado) || 0
 }
 
 /** Converte o desconto máximo informado no preço mínimo à vista armazenado. */
