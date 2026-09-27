@@ -62,6 +62,7 @@ export interface SimulacaoEstado {
   entrada: string
   formaPagamento: 'a_vista' | 'parcelado'
   parcelas: number
+  simulacaoId?: string | null
 }
 
 export function salvarEstadoSimulacao(produtoId: string, estado: SimulacaoEstado) {

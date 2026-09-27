@@ -137,6 +137,7 @@ interface Simulacao {
   forma_pagamento: string | null
   parcelas: number | null
   troca_valor: number | null
+  created_at: string
 }
 
 
@@ -165,8 +166,8 @@ export default function Estoque() {
   // UI
   const [dropdownStatus,    setDropdownStatus]    = useState<string | null>(null)
   const [cardExpandido,     setCardExpandido]     = useState<string | null>(null)
-  // simulações do vendedor logado, indexadas por produto_id
-  const [simulacoes, setSimulacoes] = useState<Record<string, Simulacao>>({})
+  // Simulações do vendedor logado agrupadas por produto.
+  const [simulacoes, setSimulacoes] = useState<Record<string, Simulacao[]>>({})
 
 
   // Modal: marcar vendido (gestor direto → confirmado)
@@ -288,15 +289,12 @@ export default function Estoque() {
     setProdutos(prev => prev.map(p => p.id === produtoId ? { ...p, [campo]: null } : p))
   }
 
-  async function cancelarSimulacao(produtoId: string) {
-    const sim = simulacoes[produtoId]
-    if (!sim) return
-    const { error } = await supabase.from('simulacoes').delete().eq('id', sim.id)
+  async function cancelarSimulacao(produtoId: string, simulacaoId: string) {
+    const { error } = await supabase.from('simulacoes').delete().eq('id', simulacaoId)
     if (error) { toastErro('Erro ao cancelar simulação: ' + error.message); return }
     setSimulacoes(prev => {
-      const novo = { ...prev }
-      delete novo[produtoId]
-      return novo
+      const restantes = (prev[produtoId] ?? []).filter(sim => sim.id !== simulacaoId)
+      return { ...prev, [produtoId]: restantes }
     })
   }
 
@@ -385,11 +383,15 @@ export default function Estoque() {
       // Simulações do usuário logado (RLS já filtra por vendedor)
       const { data: simData } = await supabase
         .from('simulacoes')
-        .select('id, produto_id, cliente_nome, valor_a_pagar, forma_pagamento, parcelas, troca_valor')
+        .select('id, produto_id, cliente_nome, valor_a_pagar, forma_pagamento, parcelas, troca_valor, created_at')
         .eq('store_id', profile.store_id)
+        .order('created_at', { ascending: false })
       if (simData && !cancelado) {
-        const map: Record<string, Simulacao> = {}
-        ;(simData as Simulacao[]).forEach(s => { map[s.produto_id] = s })
+        const map: Record<string, Simulacao[]> = {}
+        ;(simData as Simulacao[]).forEach(s => {
+          if (!map[s.produto_id]) map[s.produto_id] = []
+          map[s.produto_id].push(s)
+        })
         setSimulacoes(map)
       }
 
@@ -2019,43 +2021,57 @@ export default function Estoque() {
                   <div className="px-5 pb-5 pt-3 border-t" style={{ borderColor: '#1f1f1f' }}>
 
                     {/* Simulação de venda (acima de reserva/venda) */}
-                    {simulacoes[produto.id] ? (
+                    {(simulacoes[produto.id] ?? []).length > 0 && (
                       <div className="w-full mb-2 rounded-xl border p-3" style={{ borderColor: '#c8960c44', backgroundColor: '#c8960c0d' }}>
-                        <div className="flex items-center justify-between mb-1">
-                          <span className="text-xs font-bold" style={{ color: '#c8960c' }}>🧮 Minha simulação</span>
-                          {simulacoes[produto.id].valor_a_pagar != null && (
-                            <span className="text-sm font-bold text-white">R$ {fmt(Number(simulacoes[produto.id].valor_a_pagar))}</span>
-                          )}
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-xs font-bold" style={{ color: '#c8960c' }}>🧮 Minhas simulações</span>
+                          <span className="text-xs px-2 py-0.5 rounded-full" style={{ color: '#c8960c', backgroundColor: '#c8960c18' }}>
+                            {simulacoes[produto.id].length}
+                          </span>
                         </div>
-                        <p className="text-xs mb-2" style={{ color: '#888' }}>
-                          Cliente: <span style={{ color: '#ccc' }}>{simulacoes[produto.id].cliente_nome}</span>
-                          {simulacoes[produto.id].forma_pagamento === 'parcelado' && (simulacoes[produto.id].parcelas ?? 0) > 0
-                            ? ` · ${simulacoes[produto.id].parcelas}x`
-                            : simulacoes[produto.id].forma_pagamento === 'a_vista' ? ' · à vista' : ''}
-                          {Number(simulacoes[produto.id].troca_valor) > 0 ? ` · troca R$ ${fmt(Number(simulacoes[produto.id].troca_valor))}` : ''}
-                        </p>
-                        <div className="flex gap-2">
-                          <button onClick={() => router.push(`/dashboard/simulacao/${produto.id}`)}
-                            className="flex-1 py-1.5 rounded-lg text-xs font-bold border transition-all"
-                            style={{ borderColor: '#c8960c', color: '#c8960c', backgroundColor: '#c8960c11' }}>
-                            Abrir
-                          </button>
-                          <button onClick={() => cancelarSimulacao(produto.id)}
-                            className="flex-1 py-1.5 rounded-lg text-xs font-bold border transition-all"
-                            style={{ borderColor: '#7f1d1d', color: '#f87171', backgroundColor: '#f8717110' }}>
-                            Cancelar
-                          </button>
+
+                        <div className="flex flex-col gap-2">
+                          {simulacoes[produto.id].map(sim => (
+                            <div key={sim.id} className="rounded-lg border p-2.5" style={{ borderColor: '#2a2a2a', backgroundColor: '#111' }}>
+                              <div className="flex items-center justify-between gap-2">
+                                <span className="text-xs font-bold truncate" style={{ color: '#ddd' }}>{sim.cliente_nome}</span>
+                                {sim.valor_a_pagar != null && (
+                                  <span className="text-sm font-bold text-white whitespace-nowrap">R$ {fmt(Number(sim.valor_a_pagar))}</span>
+                                )}
+                              </div>
+                              <p className="text-xs mt-0.5 mb-2" style={{ color: '#777' }}>
+                                {sim.forma_pagamento === 'parcelado' && (sim.parcelas ?? 0) > 0
+                                  ? `${sim.parcelas}x`
+                                  : sim.forma_pagamento === 'a_vista' ? 'À vista' : 'Forma não informada'}
+                                {Number(sim.troca_valor) > 0 ? ` · troca R$ ${fmt(Number(sim.troca_valor))}` : ''}
+                              </p>
+                              <div className="flex gap-2">
+                                <button onClick={() => router.push(`/dashboard/simulacao/${produto.id}?sim=${sim.id}`)}
+                                  className="flex-1 py-1.5 rounded-lg text-xs font-bold border transition-all"
+                                  style={{ borderColor: '#c8960c', color: '#c8960c', backgroundColor: '#c8960c11' }}>
+                                  Abrir
+                                </button>
+                                <button onClick={() => cancelarSimulacao(produto.id, sim.id)}
+                                  className="flex-1 py-1.5 rounded-lg text-xs font-bold border transition-all"
+                                  style={{ borderColor: '#7f1d1d', color: '#f87171', backgroundColor: '#f8717110' }}>
+                                  Cancelar
+                                </button>
+                              </div>
+                            </div>
+                          ))}
                         </div>
                       </div>
-                    ) : produto.status === 'disponivel' ? (
+                    )}
+
+                    {produto.status === 'disponivel' && (
                       <button onClick={() => router.push(`/dashboard/simulacao/${produto.id}`)}
                         className="w-full mb-2 py-2 rounded-xl text-xs font-bold border transition-all"
                         style={{ borderColor: '#c8960c44', color: '#c8960c', backgroundColor: '#c8960c11' }}
                         onMouseEnter={e => { e.currentTarget.style.backgroundColor = '#c8960c22'; e.currentTarget.style.borderColor = '#c8960c' }}
                         onMouseLeave={e => { e.currentTarget.style.backgroundColor = '#c8960c11'; e.currentTarget.style.borderColor = '#c8960c44' }}>
-                        🧮 Simulação
+                        {simulacoes[produto.id]?.length ? '+ Nova simulação' : '🧮 Simulação'}
                       </button>
-                    ) : null}
+                    )}
 
                     {/* Vendedor: disponível */}
                     {cargo === 'vendedor' && produto.status === 'disponivel' && (

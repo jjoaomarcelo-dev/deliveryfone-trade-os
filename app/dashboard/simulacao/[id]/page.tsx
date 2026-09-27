@@ -43,6 +43,7 @@ export default function SimulacaoVenda() {
   const [userNome, setUserNome] = useState('')
   const [produto, setProduto] = useState<Produto | null>(null)
   const [juros, setJuros] = useState<Juros[]>([])
+  const [simulacaoId, setSimulacaoId] = useState<string | null>(null)
 
   const [base, setBase] = useState<BaseOpcao>('normal')
   const [entrada, setEntrada] = useState('')
@@ -58,7 +59,10 @@ export default function SimulacaoVenda() {
     // consome o handshake da troca UMA vez (Strict Mode roda o efeito 2x)
     const estado = handshakeLido.current ? null : consumirEstadoSimulacao(produtoId)
     const resTroca = handshakeLido.current ? null : consumirResultadoTroca(produtoId)
+    const simulacaoIdUrl = new URLSearchParams(window.location.search).get('sim')
+    const idParaEditar = simulacaoIdUrl ?? estado?.simulacaoId ?? null
     handshakeLido.current = true
+    setSimulacaoId(idParaEditar)
 
     async function carregar() {
       const { data: { user } } = await supabase.auth.getUser()
@@ -71,16 +75,23 @@ export default function SimulacaoVenda() {
       setStoreId(profile.store_id)
       setUserNome(profile.nome ?? '')
 
-      const [{ data: prod }, taxas, { data: sim }] = await Promise.all([
+      const [{ data: prod }, taxas] = await Promise.all([
         supabase.from('products').select('id, modelo, valor, valor_avista, promocao, atributos').eq('id', produtoId).single(),
         getTaxasAtivas(supabase, profile.store_id),
-        supabase.from('simulacoes').select('*').eq('produto_id', produtoId).eq('vendedor_id', user.id).maybeSingle(),
       ])
       if (!prod) { router.push('/dashboard/estoque'); return }
       setProduto(prod as Produto)
       if (taxas) setJuros(taxas)
 
-      // pré-preenche com a simulação salva deste vendedor (se houver)
+      const { data: sim } = idParaEditar
+        ? await supabase.from('simulacoes').select('*')
+          .eq('id', idParaEditar)
+          .eq('produto_id', produtoId)
+          .eq('vendedor_id', user.id)
+          .maybeSingle()
+        : { data: null }
+
+      // Pré-preenche apenas quando uma simulação específica foi aberta.
       if (sim) {
         if (sim.base === 'personalizado') {
           setPrecoPersonalizado(sim.preco_base ? String(sim.preco_base) : '')
@@ -111,7 +122,7 @@ export default function SimulacaoVenda() {
   }, [produtoId])
 
   function irAvaliarTroca() {
-    salvarEstadoSimulacao(produtoId, { base, entrada, formaPagamento, parcelas })
+    salvarEstadoSimulacao(produtoId, { base, entrada, formaPagamento, parcelas, simulacaoId })
     pedirAvaliacaoTroca(produtoId)
     router.push('/dashboard/avaliacao')
   }
@@ -125,7 +136,7 @@ export default function SimulacaoVenda() {
       const valorEntradaC = parseBRL(entrada)
       const aPagarC = Math.max(0, precoPartida - valorTrocaC - valorEntradaC)
 
-      const { error } = await supabase.from('simulacoes').upsert({
+      const dadosSimulacao = {
         store_id: storeId,
         produto_id: produtoId,
         vendedor_id: userId,
@@ -140,7 +151,11 @@ export default function SimulacaoVenda() {
         parcelas,
         valor_a_pagar: aPagarC,
         updated_at: new Date().toISOString(),
-      }, { onConflict: 'produto_id,vendedor_id' })
+      }
+
+      const { error } = simulacaoId
+        ? await supabase.from('simulacoes').update(dadosSimulacao).eq('id', simulacaoId).eq('vendedor_id', userId)
+        : await supabase.from('simulacoes').insert(dadosSimulacao)
       if (error) throw error
       toast.sucesso('Simulação salva — fica guardada no card do produto.')
       setTimeout(() => router.push('/dashboard/estoque'), 800)
@@ -152,10 +167,11 @@ export default function SimulacaoVenda() {
   }
 
   async function cancelar() {
+    if (!simulacaoId) { router.push('/dashboard/estoque'); return }
     if (!confirm('Cancelar esta simulação? Ela será removida do card do produto.')) return
     setSalvando(true)
     const { error } = await supabase.from('simulacoes')
-      .delete().eq('produto_id', produtoId).eq('vendedor_id', userId)
+      .delete().eq('id', simulacaoId).eq('vendedor_id', userId)
     setSalvando(false)
     if (error) { toast.erro('Erro ao cancelar: ' + error.message); return }
     router.push('/dashboard/estoque')
@@ -207,7 +223,7 @@ export default function SimulacaoVenda() {
           ← Voltar
         </button>
         <div>
-          <h1 className="font-bold text-white">Simulação de Venda</h1>
+          <h1 className="font-bold text-white">{simulacaoId ? 'Editar simulação' : 'Nova simulação'}</h1>
           <p className="text-xs" style={{ color: '#666' }}>
             {produto.modelo}{produto.atributos?.gb ? ` · ${produto.atributos.gb}` : ''}{produto.atributos?.cor ? ` · ${produto.atributos.cor}` : ''}
           </p>
@@ -393,8 +409,7 @@ export default function SimulacaoVenda() {
         <div className="rounded-2xl border p-6" style={{ backgroundColor: '#111', borderColor: '#1f1f1f' }}>
           <h2 className="font-semibold text-white mb-1">Confirmar simulação</h2>
           <p className="text-xs mb-3" style={{ color: '#666' }}>
-            Informe o cliente e confirme. A simulação fica guardada no card do produto, só para você,
-            até a venda fechar ou você cancelar.
+            Informe o cliente e confirme. Cada negociação fica guardada separadamente no card do produto.
           </p>
           <input value={clienteNome} onChange={e => setClienteNome(e.target.value)}
             placeholder="Nome do cliente"
@@ -403,12 +418,12 @@ export default function SimulacaoVenda() {
           <button onClick={confirmar} disabled={salvando}
             className="w-full py-3.5 rounded-xl font-bold text-black transition-all disabled:opacity-50"
             style={{ backgroundColor: '#c8960c' }}>
-            {salvando ? 'Salvando...' : '✓ Confirmar simulação'}
+            {salvando ? 'Salvando...' : simulacaoId ? '✓ Atualizar simulação' : '✓ Salvar simulação'}
           </button>
           <button onClick={cancelar} disabled={salvando}
             className="w-full mt-2 py-3 rounded-xl font-bold border transition-all disabled:opacity-50"
             style={{ borderColor: '#7f1d1d', color: '#f87171', backgroundColor: '#f8717110' }}>
-            Cancelar simulação
+            {simulacaoId ? 'Cancelar simulação' : 'Voltar ao estoque'}
           </button>
         </div>
 
