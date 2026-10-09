@@ -12,11 +12,9 @@ Este repositório apresenta uma versão de portfólio. Dados reais, credenciais 
 
 ## Meu papel no projeto
 
-O projeto surgiu da minha experiência com a gestão de uma loja de telefonia. Minha participação envolveu identificar os problemas da operação, definir os fluxos, organizar as regras de negócio e validar o funcionamento da solução.
+Minha contribuição partiu dos problemas que identifiquei durante minha experiência na gestão da loja. Realizei o levantamento e a organização dos requisitos, defini os fluxos e as regras de negócio e validei funcionalidades com usuários, identificando problemas e acompanhando ajustes.
 
-A implementação técnica foi desenvolvida com apoio de ferramentas de inteligência artificial e vem sendo revisada conforme avanço nos estudos de desenvolvimento web.
-
-Como desenvolvedor front-end júnior, meu foco no projeto está na construção das interfaces, na experiência de uso e na compreensão do código utilizado em cada fluxo.
+A implementação do código contou com apoio significativo de ferramentas de inteligência artificial. Atualmente, utilizo o projeto como referência de estudo para aprofundar minha compreensão do código e ampliar minha autonomia técnica.
 
 ## Demonstração
 
@@ -59,20 +57,30 @@ Cadastro e precificação de produtos, acompanhamento de margens estimadas, conf
 - TypeScript;
 - Tailwind CSS;
 - Supabase;
+- PostgreSQL (banco de dados utilizado pelo Supabase);
 - Jest;
 - Git e GitHub.
 
 ## O que pratiquei
 
-- criação de interfaces responsivas com React e Tailwind CSS;
-- organização de páginas e componentes com Next.js;
-- uso de TypeScript em formulários e regras da aplicação;
-- integração da interface com autenticação e banco de dados;
-- tratamento de estados, validações e mensagens de retorno;
-- transformação de necessidades do negócio em fluxos de tela;
-- implementação de cálculos de preço e regras de negociação;
-- testes automatizados para cálculos e regras importantes;
-- organização do desenvolvimento com Git e GitHub.
+### Contribuições diretas
+
+- análise de problemas da operação e organização dos requisitos;
+- tradução de necessidades comerciais em fluxos e regras de negócio;
+- validação das funcionalidades com usuários, identificação de problemas e acompanhamento de ajustes.
+
+### Contato técnico durante o projeto
+
+Durante o desenvolvimento assistido por IA, tive contato com os seguintes recursos e tecnologias:
+
+- interfaces responsivas com React e Tailwind CSS;
+- páginas e componentes com Next.js;
+- TypeScript em formulários e regras da aplicação;
+- integração com autenticação do Supabase e banco de dados PostgreSQL;
+- estados, validações e mensagens de retorno na interface;
+- cálculos de preço e regras de negociação no código;
+- testes automatizados com Jest;
+- Git e GitHub na organização do projeto.
 
 ## Como executar
 
@@ -80,7 +88,7 @@ O projeto depende de uma estrutura compatível no Supabase. Sem essa configuraç
 
 ### Pré-requisitos
 
-- Node.js 20 ou superior;
+- Node.js 20.9 ou superior;
 - npm;
 - projeto Supabase próprio.
 
@@ -89,7 +97,7 @@ O projeto depende de uma estrutura compatível no Supabase. Sem essa configuraç
 1. Clone o repositório:
 
    ```bash
-   git clone <URL_DO_REPOSITORIO>
+   git clone https://github.com/jjoaomarcelo-dev/deliveryfone-trade-os.git
    cd deliveryfone-trade-os
    ```
 
@@ -128,4 +136,6 @@ npm test          # executa os testes
 
 ## Status
 
-O projeto está em desenvolvimento e possui um ambiente privado de teste. As funcionalidades são revisadas conforme o uso e o avanço dos meus estudos.
+O desenvolvimento de novas funcionalidades está temporariamente pausado enquanto consolido os fundamentos de programação.
+
+A versão pública permanece disponível como projeto de portfólio, com código e demonstrações para consulta.
