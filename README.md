@@ -14,7 +14,7 @@ Este repositório apresenta uma versão de portfólio. Dados reais, credenciais 
 
 Minha contribuição partiu dos problemas que identifiquei durante minha experiência na gestão da loja. Realizei o levantamento e a organização dos requisitos, defini os fluxos e as regras de negócio e validei funcionalidades com usuários, identificando problemas e acompanhando ajustes.
 
-A implementação do código contou com apoio significativo de ferramentas de inteligência artificial. Atualmente, utilizo o projeto como referência de estudo para aprofundar minha compreensão do código e ampliar minha autonomia técnica.
+A implementação do código contou com apoio significativo de ferramentas de inteligência artificial. Minhas contribuições diretas estão na análise do problema, na definição de requisitos e regras de negócio e na validação dos fluxos com usuários.
 
 ## Demonstração
 
@@ -60,27 +60,6 @@ Cadastro e precificação de produtos, acompanhamento de margens estimadas, conf
 - PostgreSQL (banco de dados utilizado pelo Supabase);
 - Jest;
 - Git e GitHub.
-
-## O que pratiquei
-
-### Contribuições diretas
-
-- análise de problemas da operação e organização dos requisitos;
-- tradução de necessidades comerciais em fluxos e regras de negócio;
-- validação das funcionalidades com usuários, identificação de problemas e acompanhamento de ajustes.
-
-### Contato técnico durante o projeto
-
-Durante o desenvolvimento assistido por IA, tive contato com os seguintes recursos e tecnologias:
-
-- interfaces responsivas com React e Tailwind CSS;
-- páginas e componentes com Next.js;
-- TypeScript em formulários e regras da aplicação;
-- integração com autenticação do Supabase e banco de dados PostgreSQL;
-- estados, validações e mensagens de retorno na interface;
-- cálculos de preço e regras de negociação no código;
-- testes automatizados com Jest;
-- Git e GitHub na organização do projeto.
 
 ## Como executar
 
@@ -136,6 +115,4 @@ npm test          # executa os testes
 
 ## Status
 
-O desenvolvimento de novas funcionalidades está temporariamente pausado enquanto consolido os fundamentos de programação.
-
-A versão pública permanece disponível como projeto de portfólio, com código e demonstrações para consulta.
+Versão de portfólio disponível para consulta do código e das demonstrações. Novas funcionalidades não estão em desenvolvimento no momento.
